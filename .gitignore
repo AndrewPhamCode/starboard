@@ -1,0 +1,17 @@
+# Python
+server/.venv/
+server/__pycache__/
+server/**/__pycache__/
+server/*.pyc
+server/.env
+
+# Node
+client/node_modules/
+client/dist/
+client/.env.local
+
+# OS
+.DS_Store
+
+# Claude Code tooling
+.claude/

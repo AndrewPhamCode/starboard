@@ -1,0 +1,40 @@
+[
+  { "id": 1, "type": "behavioral", "category": "leadership", "text": "Tell me about a time you led a team through a difficult or ambiguous project." },
+  { "id": 2, "type": "behavioral", "category": "leadership", "text": "Describe a situation where you had to make a tough decision without full information. What was your process?" },
+  { "id": 3, "type": "behavioral", "category": "leadership", "text": "Give an example of a time you influenced people who did not directly report to you." },
+  { "id": 4, "type": "behavioral", "category": "leadership", "text": "Tell me about a time you had to rally a team that was losing motivation. What did you do?" },
+
+  { "id": 5, "type": "behavioral", "category": "conflict", "text": "Describe a time you disagreed with your manager. How did you handle it?" },
+  { "id": 6, "type": "behavioral", "category": "conflict", "text": "Tell me about a situation where two team members were in conflict. How did you resolve it?" },
+  { "id": 7, "type": "behavioral", "category": "conflict", "text": "Give an example of a time you received critical feedback you initially disagreed with. What did you do?" },
+  { "id": 8, "type": "behavioral", "category": "conflict", "text": "Describe a time you had to push back on a stakeholder request. How did you approach that conversation?" },
+
+  { "id": 9, "type": "behavioral", "category": "failure", "text": "Tell me about a project or initiative that failed. What happened and what did you learn?" },
+  { "id": 10, "type": "behavioral", "category": "failure", "text": "Describe a time you missed a deadline or an important goal. What was your response?" },
+  { "id": 11, "type": "behavioral", "category": "failure", "text": "Give an example of a mistake you made that had a significant impact. How did you recover?" },
+  { "id": 12, "type": "behavioral", "category": "failure", "text": "Tell me about a time your assumptions turned out to be wrong. How did you adapt?" },
+
+  { "id": 13, "type": "behavioral", "category": "teamwork", "text": "Describe a time you worked with a difficult colleague to accomplish a shared goal." },
+  { "id": 14, "type": "behavioral", "category": "teamwork", "text": "Tell me about a time you went above and beyond to help a teammate succeed." },
+  { "id": 15, "type": "behavioral", "category": "teamwork", "text": "Give an example of a time you had to adapt your communication style to work effectively with someone very different from you." },
+  { "id": 16, "type": "behavioral", "category": "teamwork", "text": "Describe a situation where you had to coordinate across multiple teams or departments. What challenges did you face?" },
+
+  { "id": 17, "type": "behavioral", "category": "impact", "text": "Tell me about the project you are most proud of. What was the outcome and why does it matter?" },
+  { "id": 18, "type": "behavioral", "category": "impact", "text": "Describe a time you identified and solved a problem nobody else had noticed. What was the result?" },
+  { "id": 19, "type": "behavioral", "category": "impact", "text": "Give an example of a time you improved a process or system. How did you measure success?" },
+  { "id": 20, "type": "behavioral", "category": "impact", "text": "Tell me about a time you delivered results under significant constraints (time, budget, resources)." },
+
+  { "id": 21, "type": "technical", "category": "system-design", "text": "Design a URL shortener like bit.ly. Walk me through your architecture decisions and trade-offs." },
+  { "id": 22, "type": "technical", "category": "system-design", "text": "How would you design a rate limiter for a public API? What data structures and algorithms would you use?" },
+  { "id": 23, "type": "technical", "category": "system-design", "text": "Design a notification service that can send push, email, and SMS alerts at scale. What are the main challenges?" },
+  { "id": 24, "type": "technical", "category": "system-design", "text": "How would you design a distributed cache? Walk through consistency, eviction, and fault tolerance." },
+  { "id": 25, "type": "technical", "category": "debugging", "text": "Describe a production bug you debugged that was particularly challenging. What was your process for finding and fixing it?" },
+  { "id": 26, "type": "technical", "category": "debugging", "text": "Tell me about a time a performance issue appeared in production. How did you identify the root cause and resolve it?" },
+  { "id": 27, "type": "technical", "category": "architecture", "text": "Tell me about a significant technical decision you made on a past project. What were the alternatives you considered?" },
+  { "id": 28, "type": "technical", "category": "architecture", "text": "Describe a time you had to refactor a large codebase or legacy system. How did you approach it without breaking things?" },
+
+  { "id": 29, "type": "resume", "category": "experience", "text": "Walk me through your most recent role. What were your core responsibilities and biggest accomplishments?" },
+  { "id": 30, "type": "resume", "category": "experience", "text": "Tell me about a project on your resume you are most proud of. What was your specific contribution?" },
+  { "id": 31, "type": "resume", "category": "experience", "text": "I see a gap or transition in your resume. Can you walk me through what happened and what you took away from that period?" },
+  { "id": 32, "type": "resume", "category": "experience", "text": "You listed a specific skill or technology on your resume. Tell me about a time you used it to solve a real problem." }
+]
