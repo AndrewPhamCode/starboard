@@ -1,73 +1,38 @@
-# React + TypeScript + Vite
+# Starboard — Design Decisions
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Frontend
 
-Currently, two official plugins are available:
+**Claymorphism UI**
+Hard 3px borders, zero-blur drop shadows (`5px 5px 0px`), and `rounded-3xl` corners. All built on a single `Clay` component so the style is consistent and easy to update globally.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+**Color-per-mode**
+Each interview mode owns a color family (rose, violet, emerald, amber) applied consistently across cards, tabs, icons, and score bars. Color becomes a navigation signal — users recognize their mode by color before reading text.
 
-## React Compiler
+**Fonts**
+- Baloo 2 — headings and CTAs, rounds out the clay aesthetic
+- Plus Jakarta Sans — body and UI text
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+**Warm cream base (`#FEFCE8`)**
+Avoids pure white fatigue. Alternating `bg-white` sections create rhythm without hard dividers.
 
-## Expanding the ESLint configuration
+**Record button states**
+Three distinct states (idle / recording / transcribing) with `animate-pulse` during recording and a live `MM:SS` monospace timer. Prevents users from wondering if the mic is on.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+**Score card color coding**
+4–5 → indigo, 3 → amber, 1–2 → red. Users read their score at a glance without parsing numbers.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+---
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Backend
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+**Whisper (OpenAI) for transcription**
+Voice input to simulate a real interview environment. Whisper handles accents and filler words better than browser-native speech APIs and returns clean text for Claude to score.
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+**FastAPI**
+The whole backend stays in Python — Whisper, Claude API, and Supabase all have Python SDKs. FastAPI gives async support and auto-generated `/docs` for free.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+**Supabase over Firebase**
+Session data (questions, scores, transcripts) is relational — users have sessions, sessions have answers, answers have scores. A document store would mean nested objects and manual joins. Supabase gives PostgreSQL, auth, and real-time out of the box.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+**Claude (`claude-sonnet-4-6`) for scoring**
+All Claude API calls go through a single `claude_service.py`. Centralizing this means one place to update prompts, tweak the model, or add retries.

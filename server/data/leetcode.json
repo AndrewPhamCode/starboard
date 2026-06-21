@@ -1,0 +1,612 @@
+[
+  {
+    "id": 1001, "slug": "two-sum", "title": "Two Sum", "neetcode_number": 1,
+    "difficulty": "easy", "category": "arrays-hashing",
+    "description": "Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target. You may assume that each input would have exactly one solution, and you may not use the same element twice. You can return the answer in any order.",
+    "examples": [
+      {"input": "nums = [2,7,11,15], target = 9", "output": "[0,1]", "explanation": "Because nums[0] + nums[1] == 9, we return [0, 1]."},
+      {"input": "nums = [3,2,4], target = 6", "output": "[1,2]"}
+    ],
+    "constraints": ["2 <= nums.length <= 10^4", "-10^9 <= nums[i] <= 10^9", "-10^9 <= target <= 10^9", "Only one valid answer exists."],
+    "follow_up_hints": ["Can you come up with an algorithm that is less than O(n^2) time complexity?", "What data structure allows O(1) lookups?"],
+    "starter_code": {
+      "python": "from typing import List\n\nclass Solution:\n    def twoSum(self, nums: List[int], target: int) -> List[int]:\n        pass\n\n# Test\ns = Solution()\nprint(s.twoSum([2,7,11,15], 9))  # [0,1]\nprint(s.twoSum([3,2,4], 6))      # [1,2]",
+      "javascript": "/**\n * @param {number[]} nums\n * @param {number} target\n * @return {number[]}\n */\nvar twoSum = function(nums, target) {\n    \n};\n\nconsole.log(twoSum([2,7,11,15], 9)); // [0,1]\nconsole.log(twoSum([3,2,4], 6));     // [1,2]",
+      "java": "import java.util.*;\n\nclass Solution {\n    public int[] twoSum(int[] nums, int target) {\n        \n    }\n\n    public static void main(String[] args) {\n        Solution s = new Solution();\n        System.out.println(Arrays.toString(s.twoSum(new int[]{2,7,11,15}, 9)));\n    }\n}",
+      "cpp": "#include <vector>\n#include <iostream>\nusing namespace std;\n\nclass Solution {\npublic:\n    vector<int> twoSum(vector<int>& nums, int target) {\n        \n    }\n};\n\nint main() {\n    Solution s;\n    vector<int> nums = {2,7,11,15};\n    auto res = s.twoSum(nums, 9);\n    cout << res[0] << \",\" << res[1] << endl;\n}"
+    }
+  },
+  {
+    "id": 1002, "slug": "contains-duplicate", "title": "Contains Duplicate", "neetcode_number": 2,
+    "difficulty": "easy", "category": "arrays-hashing",
+    "description": "Given an integer array nums, return true if any value appears at least twice in the array, and return false if every element is distinct.",
+    "examples": [
+      {"input": "nums = [1,2,3,1]", "output": "true"},
+      {"input": "nums = [1,2,3,4]", "output": "false"},
+      {"input": "nums = [1,1,1,3,3,4,3,2,4,2]", "output": "true"}
+    ],
+    "constraints": ["1 <= nums.length <= 10^5", "-10^9 <= nums[i] <= 10^9"],
+    "follow_up_hints": ["Can you do it in O(n) time?", "What's the space trade-off between sorting and using a hash set?"],
+    "starter_code": {
+      "python": "from typing import List\n\nclass Solution:\n    def containsDuplicate(self, nums: List[int]) -> bool:\n        pass\n\ns = Solution()\nprint(s.containsDuplicate([1,2,3,1]))  # True\nprint(s.containsDuplicate([1,2,3,4]))  # False",
+      "javascript": "/**\n * @param {number[]} nums\n * @return {boolean}\n */\nvar containsDuplicate = function(nums) {\n    \n};\n\nconsole.log(containsDuplicate([1,2,3,1])); // true\nconsole.log(containsDuplicate([1,2,3,4])); // false",
+      "java": "import java.util.*;\n\nclass Solution {\n    public boolean containsDuplicate(int[] nums) {\n        \n    }\n\n    public static void main(String[] args) {\n        Solution s = new Solution();\n        System.out.println(s.containsDuplicate(new int[]{1,2,3,1}));\n    }\n}",
+      "cpp": "#include <vector>\n#include <iostream>\nusing namespace std;\n\nclass Solution {\npublic:\n    bool containsDuplicate(vector<int>& nums) {\n        \n    }\n};\n\nint main() {\n    Solution s;\n    vector<int> nums = {1,2,3,1};\n    cout << s.containsDuplicate(nums) << endl;\n}"
+    }
+  },
+  {
+    "id": 1003, "slug": "valid-anagram", "title": "Valid Anagram", "neetcode_number": 3,
+    "difficulty": "easy", "category": "arrays-hashing",
+    "description": "Given two strings s and t, return true if t is an anagram of s, and false otherwise. An anagram is a word or phrase formed by rearranging the letters of a different word or phrase, using all the original letters exactly once.",
+    "examples": [
+      {"input": "s = \"anagram\", t = \"nagaram\"", "output": "true"},
+      {"input": "s = \"rat\", t = \"car\"", "output": "false"}
+    ],
+    "constraints": ["1 <= s.length, t.length <= 5 * 10^4", "s and t consist of lowercase English letters."],
+    "follow_up_hints": ["What if the inputs contain Unicode characters? How would you adapt your solution?"],
+    "starter_code": {
+      "python": "class Solution:\n    def isAnagram(self, s: str, t: str) -> bool:\n        pass\n\nsol = Solution()\nprint(sol.isAnagram(\"anagram\", \"nagaram\"))  # True\nprint(sol.isAnagram(\"rat\", \"car\"))           # False",
+      "javascript": "/**\n * @param {string} s\n * @param {string} t\n * @return {boolean}\n */\nvar isAnagram = function(s, t) {\n    \n};\n\nconsole.log(isAnagram(\"anagram\", \"nagaram\")); // true\nconsole.log(isAnagram(\"rat\", \"car\"));         // false",
+      "java": "class Solution {\n    public boolean isAnagram(String s, String t) {\n        \n    }\n\n    public static void main(String[] args) {\n        Solution sol = new Solution();\n        System.out.println(sol.isAnagram(\"anagram\", \"nagaram\"));\n    }\n}",
+      "cpp": "#include <string>\n#include <iostream>\nusing namespace std;\n\nclass Solution {\npublic:\n    bool isAnagram(string s, string t) {\n        \n    }\n};\n\nint main() {\n    Solution sol;\n    cout << sol.isAnagram(\"anagram\", \"nagaram\") << endl;\n}"
+    }
+  },
+  {
+    "id": 1004, "slug": "group-anagrams", "title": "Group Anagrams", "neetcode_number": 5,
+    "difficulty": "medium", "category": "arrays-hashing",
+    "description": "Given an array of strings strs, group the anagrams together. You can return the answer in any order. An anagram is a word or phrase formed by rearranging the letters of a different word or phrase, using all the original letters exactly once.",
+    "examples": [
+      {"input": "strs = [\"eat\",\"tea\",\"tan\",\"ate\",\"nat\",\"bat\"]", "output": "[[\"bat\"],[\"nat\",\"tan\"],[\"ate\",\"eat\",\"tea\"]]"},
+      {"input": "strs = [\"\"]", "output": "[[\"\"]]"}
+    ],
+    "constraints": ["1 <= strs.length <= 10^4", "0 <= strs[i].length <= 100", "strs[i] consists of lowercase English letters."],
+    "follow_up_hints": ["What's the key insight for grouping anagrams efficiently?", "What is the time complexity of sorting each string vs using a character count?"],
+    "starter_code": {
+      "python": "from typing import List\n\nclass Solution:\n    def groupAnagrams(self, strs: List[str]) -> List[List[str]]:\n        pass\n\ns = Solution()\nprint(s.groupAnagrams([\"eat\",\"tea\",\"tan\",\"ate\",\"nat\",\"bat\"]))",
+      "javascript": "/**\n * @param {string[]} strs\n * @return {string[][]}\n */\nvar groupAnagrams = function(strs) {\n    \n};\n\nconsole.log(groupAnagrams([\"eat\",\"tea\",\"tan\",\"ate\",\"nat\",\"bat\"]));",
+      "java": "import java.util.*;\n\nclass Solution {\n    public List<List<String>> groupAnagrams(String[] strs) {\n        \n    }\n\n    public static void main(String[] args) {\n        Solution s = new Solution();\n        System.out.println(s.groupAnagrams(new String[]{\"eat\",\"tea\",\"tan\",\"ate\",\"nat\",\"bat\"}));\n    }\n}",
+      "cpp": "#include <vector>\n#include <string>\n#include <iostream>\nusing namespace std;\n\nclass Solution {\npublic:\n    vector<vector<string>> groupAnagrams(vector<string>& strs) {\n        \n    }\n};\n\nint main() {\n    Solution s;\n    vector<string> strs = {\"eat\",\"tea\",\"tan\",\"ate\",\"nat\",\"bat\"};\n    auto res = s.groupAnagrams(strs);\n    cout << res.size() << \" groups\" << endl;\n}"
+    }
+  },
+  {
+    "id": 1005, "slug": "top-k-frequent-elements", "title": "Top K Frequent Elements", "neetcode_number": 6,
+    "difficulty": "medium", "category": "arrays-hashing",
+    "description": "Given an integer array nums and an integer k, return the k most frequent elements. You may return the answer in any order.",
+    "examples": [
+      {"input": "nums = [1,1,1,2,2,3], k = 2", "output": "[1,2]"},
+      {"input": "nums = [1], k = 1", "output": "[1]"}
+    ],
+    "constraints": ["1 <= nums.length <= 10^5", "-10^4 <= nums[i] <= 10^4", "k is in the range [1, the number of unique elements in the array].", "It is guaranteed that the answer is unique."],
+    "follow_up_hints": ["Your algorithm's time complexity must be better than O(n log n), where n is the array's size.", "What is bucket sort and how can it help here?"],
+    "starter_code": {
+      "python": "from typing import List\n\nclass Solution:\n    def topKFrequent(self, nums: List[int], k: int) -> List[int]:\n        pass\n\ns = Solution()\nprint(s.topKFrequent([1,1,1,2,2,3], 2))  # [1,2]\nprint(s.topKFrequent([1], 1))             # [1]",
+      "javascript": "/**\n * @param {number[]} nums\n * @param {number} k\n * @return {number[]}\n */\nvar topKFrequent = function(nums, k) {\n    \n};\n\nconsole.log(topKFrequent([1,1,1,2,2,3], 2));\nconsole.log(topKFrequent([1], 1));",
+      "java": "import java.util.*;\n\nclass Solution {\n    public int[] topKFrequent(int[] nums, int k) {\n        \n    }\n\n    public static void main(String[] args) {\n        Solution s = new Solution();\n        System.out.println(Arrays.toString(s.topKFrequent(new int[]{1,1,1,2,2,3}, 2)));\n    }\n}",
+      "cpp": "#include <vector>\n#include <iostream>\nusing namespace std;\n\nclass Solution {\npublic:\n    vector<int> topKFrequent(vector<int>& nums, int k) {\n        \n    }\n};\n\nint main() {\n    Solution s;\n    vector<int> nums = {1,1,1,2,2,3};\n    auto res = s.topKFrequent(nums, 2);\n    for (int x : res) cout << x << \" \";\n    cout << endl;\n}"
+    }
+  },
+  {
+    "id": 1006, "slug": "product-of-array-except-self", "title": "Product of Array Except Self", "neetcode_number": 7,
+    "difficulty": "medium", "category": "arrays-hashing",
+    "description": "Given an integer array nums, return an array answer such that answer[i] is equal to the product of all the elements of nums except nums[i]. The product of any prefix or suffix of nums is guaranteed to fit in a 32-bit integer. You must write an algorithm that runs in O(n) time and without using the division operation.",
+    "examples": [
+      {"input": "nums = [1,2,3,4]", "output": "[24,12,8,6]"},
+      {"input": "nums = [-1,1,0,-3,3]", "output": "[0,0,9,0,0]"}
+    ],
+    "constraints": ["2 <= nums.length <= 10^5", "-30 <= nums[i] <= 30"],
+    "follow_up_hints": ["Can you solve the problem in O(1) extra space complexity? The output array does not count as extra space.", "Think prefix products and suffix products."],
+    "starter_code": {
+      "python": "from typing import List\n\nclass Solution:\n    def productExceptSelf(self, nums: List[int]) -> List[int]:\n        pass\n\ns = Solution()\nprint(s.productExceptSelf([1,2,3,4]))       # [24,12,8,6]\nprint(s.productExceptSelf([-1,1,0,-3,3]))   # [0,0,9,0,0]",
+      "javascript": "/**\n * @param {number[]} nums\n * @return {number[]}\n */\nvar productExceptSelf = function(nums) {\n    \n};\n\nconsole.log(productExceptSelf([1,2,3,4]));\nconsole.log(productExceptSelf([-1,1,0,-3,3]));",
+      "java": "import java.util.*;\n\nclass Solution {\n    public int[] productExceptSelf(int[] nums) {\n        \n    }\n\n    public static void main(String[] args) {\n        Solution s = new Solution();\n        System.out.println(Arrays.toString(s.productExceptSelf(new int[]{1,2,3,4})));\n    }\n}",
+      "cpp": "#include <vector>\n#include <iostream>\nusing namespace std;\n\nclass Solution {\npublic:\n    vector<int> productExceptSelf(vector<int>& nums) {\n        \n    }\n};\n\nint main() {\n    Solution s;\n    vector<int> nums = {1,2,3,4};\n    auto res = s.productExceptSelf(nums);\n    for (int x : res) cout << x << \" \";\n    cout << endl;\n}"
+    }
+  },
+  {
+    "id": 1007, "slug": "longest-consecutive-sequence", "title": "Longest Consecutive Sequence", "neetcode_number": 9,
+    "difficulty": "medium", "category": "arrays-hashing",
+    "description": "Given an unsorted array of integers nums, return the length of the longest consecutive elements sequence. You must write an algorithm that runs in O(n) time.",
+    "examples": [
+      {"input": "nums = [100,4,200,1,3,2]", "output": "4", "explanation": "The longest consecutive elements sequence is [1, 2, 3, 4]. Therefore its length is 4."},
+      {"input": "nums = [0,3,7,2,5,8,4,6,0,1]", "output": "9"}
+    ],
+    "constraints": ["0 <= nums.length <= 10^5", "-10^9 <= nums[i] <= 10^9"],
+    "follow_up_hints": ["How do you identify the start of a sequence?", "Why do we check if num-1 is NOT in the set?"],
+    "starter_code": {
+      "python": "from typing import List\n\nclass Solution:\n    def longestConsecutive(self, nums: List[int]) -> int:\n        pass\n\ns = Solution()\nprint(s.longestConsecutive([100,4,200,1,3,2]))      # 4\nprint(s.longestConsecutive([0,3,7,2,5,8,4,6,0,1])) # 9",
+      "javascript": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar longestConsecutive = function(nums) {\n    \n};\n\nconsole.log(longestConsecutive([100,4,200,1,3,2]));\nconsole.log(longestConsecutive([0,3,7,2,5,8,4,6,0,1]));",
+      "java": "import java.util.*;\n\nclass Solution {\n    public int longestConsecutive(int[] nums) {\n        \n    }\n\n    public static void main(String[] args) {\n        Solution s = new Solution();\n        System.out.println(s.longestConsecutive(new int[]{100,4,200,1,3,2}));\n    }\n}",
+      "cpp": "#include <vector>\n#include <unordered_set>\n#include <iostream>\nusing namespace std;\n\nclass Solution {\npublic:\n    int longestConsecutive(vector<int>& nums) {\n        \n    }\n};\n\nint main() {\n    Solution s;\n    vector<int> nums = {100,4,200,1,3,2};\n    cout << s.longestConsecutive(nums) << endl;\n}"
+    }
+  },
+  {
+    "id": 1008, "slug": "valid-palindrome", "title": "Valid Palindrome", "neetcode_number": 10,
+    "difficulty": "easy", "category": "two-pointers",
+    "description": "A phrase is a palindrome if, after converting all uppercase letters into lowercase letters and removing all non-alphanumeric characters, it reads the same forward and backward. Alphanumeric characters include letters and numbers. Given a string s, return true if it is a palindrome, or false otherwise.",
+    "examples": [
+      {"input": "s = \"A man, a plan, a canal: Panama\"", "output": "true", "explanation": "\"amanaplanacanalpanama\" is a palindrome."},
+      {"input": "s = \"race a car\"", "output": "false"},
+      {"input": "s = \" \"", "output": "true"}
+    ],
+    "constraints": ["1 <= s.length <= 2 * 10^5", "s consists only of printable ASCII characters."],
+    "follow_up_hints": ["Can you do it with O(1) extra space using two pointers?"],
+    "starter_code": {
+      "python": "class Solution:\n    def isPalindrome(self, s: str) -> bool:\n        pass\n\nsol = Solution()\nprint(sol.isPalindrome(\"A man, a plan, a canal: Panama\"))  # True\nprint(sol.isPalindrome(\"race a car\"))                      # False",
+      "javascript": "/**\n * @param {string} s\n * @return {boolean}\n */\nvar isPalindrome = function(s) {\n    \n};\n\nconsole.log(isPalindrome(\"A man, a plan, a canal: Panama\")); // true\nconsole.log(isPalindrome(\"race a car\"));                     // false",
+      "java": "class Solution {\n    public boolean isPalindrome(String s) {\n        \n    }\n\n    public static void main(String[] args) {\n        Solution sol = new Solution();\n        System.out.println(sol.isPalindrome(\"A man, a plan, a canal: Panama\"));\n    }\n}",
+      "cpp": "#include <string>\n#include <iostream>\nusing namespace std;\n\nclass Solution {\npublic:\n    bool isPalindrome(string s) {\n        \n    }\n};\n\nint main() {\n    Solution sol;\n    cout << sol.isPalindrome(\"A man, a plan, a canal: Panama\") << endl;\n}"
+    }
+  },
+  {
+    "id": 1009, "slug": "3sum", "title": "3Sum", "neetcode_number": 12,
+    "difficulty": "medium", "category": "two-pointers",
+    "description": "Given an integer array nums, return all the triplets [nums[i], nums[j], nums[k]] such that i != j, i != k, and j != k, and nums[i] + nums[j] + nums[k] == 0. Notice that the solution set must not contain duplicate triplets.",
+    "examples": [
+      {"input": "nums = [-1,0,1,2,-1,-4]", "output": "[[-1,-1,2],[-1,0,1]]"},
+      {"input": "nums = [0,1,1]", "output": "[]"},
+      {"input": "nums = [0,0,0]", "output": "[[0,0,0]]"}
+    ],
+    "constraints": ["3 <= nums.length <= 3000", "-10^5 <= nums[i] <= 10^5"],
+    "follow_up_hints": ["How do you avoid duplicates without using a set?", "Why sort first? What does sorting enable for the two-pointer approach?"],
+    "starter_code": {
+      "python": "from typing import List\n\nclass Solution:\n    def threeSum(self, nums: List[int]) -> List[List[int]]:\n        pass\n\ns = Solution()\nprint(s.threeSum([-1,0,1,2,-1,-4]))  # [[-1,-1,2],[-1,0,1]]\nprint(s.threeSum([0,0,0]))           # [[0,0,0]]",
+      "javascript": "/**\n * @param {number[]} nums\n * @return {number[][]}\n */\nvar threeSum = function(nums) {\n    \n};\n\nconsole.log(threeSum([-1,0,1,2,-1,-4]));\nconsole.log(threeSum([0,0,0]));",
+      "java": "import java.util.*;\n\nclass Solution {\n    public List<List<Integer>> threeSum(int[] nums) {\n        \n    }\n\n    public static void main(String[] args) {\n        Solution s = new Solution();\n        System.out.println(s.threeSum(new int[]{-1,0,1,2,-1,-4}));\n    }\n}",
+      "cpp": "#include <vector>\n#include <algorithm>\n#include <iostream>\nusing namespace std;\n\nclass Solution {\npublic:\n    vector<vector<int>> threeSum(vector<int>& nums) {\n        \n    }\n};\n\nint main() {\n    Solution s;\n    vector<int> nums = {-1,0,1,2,-1,-4};\n    auto res = s.threeSum(nums);\n    cout << res.size() << \" triplets\" << endl;\n}"
+    }
+  },
+  {
+    "id": 1010, "slug": "container-with-most-water", "title": "Container With Most Water", "neetcode_number": 13,
+    "difficulty": "medium", "category": "two-pointers",
+    "description": "You are given an integer array height of length n. There are n vertical lines drawn such that the two endpoints of the ith line are (i, 0) and (i, height[i]). Find two lines that together with the x-axis form a container, such that the container contains the most water. Return the maximum amount of water a container can store.",
+    "examples": [
+      {"input": "height = [1,8,6,2,5,4,8,3,7]", "output": "49", "explanation": "The lines at indices 1 and 8 form the largest container with area = 7 * 7 = 49."},
+      {"input": "height = [1,1]", "output": "1"}
+    ],
+    "constraints": ["n == height.length", "2 <= n <= 10^5", "0 <= height[i] <= 10^4"],
+    "follow_up_hints": ["Why do we always move the pointer pointing to the shorter line?", "Can you prove this greedy choice is always optimal?"],
+    "starter_code": {
+      "python": "from typing import List\n\nclass Solution:\n    def maxArea(self, height: List[int]) -> int:\n        pass\n\ns = Solution()\nprint(s.maxArea([1,8,6,2,5,4,8,3,7]))  # 49\nprint(s.maxArea([1,1]))                 # 1",
+      "javascript": "/**\n * @param {number[]} height\n * @return {number}\n */\nvar maxArea = function(height) {\n    \n};\n\nconsole.log(maxArea([1,8,6,2,5,4,8,3,7])); // 49\nconsole.log(maxArea([1,1]));                // 1",
+      "java": "class Solution {\n    public int maxArea(int[] height) {\n        \n    }\n\n    public static void main(String[] args) {\n        Solution s = new Solution();\n        System.out.println(s.maxArea(new int[]{1,8,6,2,5,4,8,3,7}));\n    }\n}",
+      "cpp": "#include <vector>\n#include <iostream>\nusing namespace std;\n\nclass Solution {\npublic:\n    int maxArea(vector<int>& height) {\n        \n    }\n};\n\nint main() {\n    Solution s;\n    vector<int> h = {1,8,6,2,5,4,8,3,7};\n    cout << s.maxArea(h) << endl;\n}"
+    }
+  },
+  {
+    "id": 1011, "slug": "best-time-to-buy-and-sell-stock", "title": "Best Time to Buy and Sell Stock", "neetcode_number": 15,
+    "difficulty": "easy", "category": "sliding-window",
+    "description": "You are given an array prices where prices[i] is the price of a given stock on the ith day. You want to maximize your profit by choosing a single day to buy one stock and choosing a different day in the future to sell that stock. Return the maximum profit you can achieve from this transaction. If you cannot achieve any profit, return 0.",
+    "examples": [
+      {"input": "prices = [7,1,5,3,6,4]", "output": "5", "explanation": "Buy on day 2 (price=1) and sell on day 5 (price=6). Profit = 6-1 = 5."},
+      {"input": "prices = [7,6,4,3,1]", "output": "0"}
+    ],
+    "constraints": ["1 <= prices.length <= 10^5", "0 <= prices[i] <= 10^4"],
+    "follow_up_hints": ["What two values do you need to track as you scan left to right?"],
+    "starter_code": {
+      "python": "from typing import List\n\nclass Solution:\n    def maxProfit(self, prices: List[int]) -> int:\n        pass\n\ns = Solution()\nprint(s.maxProfit([7,1,5,3,6,4]))  # 5\nprint(s.maxProfit([7,6,4,3,1]))    # 0",
+      "javascript": "/**\n * @param {number[]} prices\n * @return {number}\n */\nvar maxProfit = function(prices) {\n    \n};\n\nconsole.log(maxProfit([7,1,5,3,6,4])); // 5\nconsole.log(maxProfit([7,6,4,3,1]));   // 0",
+      "java": "class Solution {\n    public int maxProfit(int[] prices) {\n        \n    }\n\n    public static void main(String[] args) {\n        Solution s = new Solution();\n        System.out.println(s.maxProfit(new int[]{7,1,5,3,6,4}));\n    }\n}",
+      "cpp": "#include <vector>\n#include <iostream>\nusing namespace std;\n\nclass Solution {\npublic:\n    int maxProfit(vector<int>& prices) {\n        \n    }\n};\n\nint main() {\n    Solution s;\n    vector<int> p = {7,1,5,3,6,4};\n    cout << s.maxProfit(p) << endl;\n}"
+    }
+  },
+  {
+    "id": 1012, "slug": "longest-substring-without-repeating-characters", "title": "Longest Substring Without Repeating Characters", "neetcode_number": 16,
+    "difficulty": "medium", "category": "sliding-window",
+    "description": "Given a string s, find the length of the longest substring without repeating characters.",
+    "examples": [
+      {"input": "s = \"abcabcbb\"", "output": "3", "explanation": "The answer is \"abc\", with the length of 3."},
+      {"input": "s = \"bbbbb\"", "output": "1"},
+      {"input": "s = \"pwwkew\"", "output": "3"}
+    ],
+    "constraints": ["0 <= s.length <= 5 * 10^4", "s consists of English letters, digits, symbols and spaces."],
+    "follow_up_hints": ["What does the sliding window look like here?", "How do you efficiently check if a character is already in the window?"],
+    "starter_code": {
+      "python": "class Solution:\n    def lengthOfLongestSubstring(self, s: str) -> int:\n        pass\n\nsol = Solution()\nprint(sol.lengthOfLongestSubstring(\"abcabcbb\"))  # 3\nprint(sol.lengthOfLongestSubstring(\"bbbbb\"))     # 1\nprint(sol.lengthOfLongestSubstring(\"pwwkew\"))    # 3",
+      "javascript": "/**\n * @param {string} s\n * @return {number}\n */\nvar lengthOfLongestSubstring = function(s) {\n    \n};\n\nconsole.log(lengthOfLongestSubstring(\"abcabcbb\")); // 3\nconsole.log(lengthOfLongestSubstring(\"bbbbb\"));    // 1",
+      "java": "class Solution {\n    public int lengthOfLongestSubstring(String s) {\n        \n    }\n\n    public static void main(String[] args) {\n        Solution sol = new Solution();\n        System.out.println(sol.lengthOfLongestSubstring(\"abcabcbb\"));\n    }\n}",
+      "cpp": "#include <string>\n#include <iostream>\nusing namespace std;\n\nclass Solution {\npublic:\n    int lengthOfLongestSubstring(string s) {\n        \n    }\n};\n\nint main() {\n    Solution sol;\n    cout << sol.lengthOfLongestSubstring(\"abcabcbb\") << endl;\n}"
+    }
+  },
+  {
+    "id": 1013, "slug": "longest-repeating-character-replacement", "title": "Longest Repeating Character Replacement", "neetcode_number": 17,
+    "difficulty": "medium", "category": "sliding-window",
+    "description": "You are given a string s and an integer k. You can choose any character of the string and change it to any other uppercase English character. You can perform this operation at most k times. Return the length of the longest substring containing the same letter you can get after performing the above operations.",
+    "examples": [
+      {"input": "s = \"ABAB\", k = 2", "output": "4", "explanation": "Replace the two 'A's with two 'B's or vice versa."},
+      {"input": "s = \"AABABBA\", k = 1", "output": "4"}
+    ],
+    "constraints": ["1 <= s.length <= 10^5", "s consists of only uppercase English letters.", "0 <= k <= s.length"],
+    "follow_up_hints": ["What condition tells you the window is invalid?", "When window_length - max_freq > k, what do you do?"],
+    "starter_code": {
+      "python": "class Solution:\n    def characterReplacement(self, s: str, k: int) -> int:\n        pass\n\nsol = Solution()\nprint(sol.characterReplacement(\"ABAB\", 2))    # 4\nprint(sol.characterReplacement(\"AABABBA\", 1)) # 4",
+      "javascript": "/**\n * @param {string} s\n * @param {number} k\n * @return {number}\n */\nvar characterReplacement = function(s, k) {\n    \n};\n\nconsole.log(characterReplacement(\"ABAB\", 2));    // 4\nconsole.log(characterReplacement(\"AABABBA\", 1)); // 4",
+      "java": "class Solution {\n    public int characterReplacement(String s, int k) {\n        \n    }\n\n    public static void main(String[] args) {\n        Solution sol = new Solution();\n        System.out.println(sol.characterReplacement(\"ABAB\", 2));\n    }\n}",
+      "cpp": "#include <string>\n#include <iostream>\nusing namespace std;\n\nclass Solution {\npublic:\n    int characterReplacement(string s, int k) {\n        \n    }\n};\n\nint main() {\n    Solution sol;\n    cout << sol.characterReplacement(\"ABAB\", 2) << endl;\n}"
+    }
+  },
+  {
+    "id": 1014, "slug": "minimum-window-substring", "title": "Minimum Window Substring", "neetcode_number": 19,
+    "difficulty": "hard", "category": "sliding-window",
+    "description": "Given two strings s and t of lengths m and n respectively, return the minimum window substring of s such that every character in t (including duplicates) is included in the window. If there is no such substring, return the empty string \"\". The testcases will be generated such that the answer is unique.",
+    "examples": [
+      {"input": "s = \"ADOBECODEBANC\", t = \"ABC\"", "output": "\"BANC\"", "explanation": "The minimum window substring \"BANC\" includes 'A', 'B', and 'C' from string t."},
+      {"input": "s = \"a\", t = \"a\"", "output": "\"a\""},
+      {"input": "s = \"a\", t = \"aa\"", "output": "\"\""}
+    ],
+    "constraints": ["m == s.length", "n == t.length", "1 <= m, n <= 10^5", "s and t consist of uppercase and lowercase English letters."],
+    "follow_up_hints": ["How do you efficiently track when the window is valid?", "What does 'have' vs 'need' mean in this context?"],
+    "starter_code": {
+      "python": "class Solution:\n    def minWindow(self, s: str, t: str) -> str:\n        pass\n\nsol = Solution()\nprint(sol.minWindow(\"ADOBECODEBANC\", \"ABC\"))  # \"BANC\"\nprint(sol.minWindow(\"a\", \"a\"))                 # \"a\"\nprint(sol.minWindow(\"a\", \"aa\"))                # \"\"",
+      "javascript": "/**\n * @param {string} s\n * @param {string} t\n * @return {string}\n */\nvar minWindow = function(s, t) {\n    \n};\n\nconsole.log(minWindow(\"ADOBECODEBANC\", \"ABC\")); // \"BANC\"\nconsole.log(minWindow(\"a\", \"aa\"));              // \"\"",
+      "java": "class Solution {\n    public String minWindow(String s, String t) {\n        \n    }\n\n    public static void main(String[] args) {\n        Solution sol = new Solution();\n        System.out.println(sol.minWindow(\"ADOBECODEBANC\", \"ABC\"));\n    }\n}",
+      "cpp": "#include <string>\n#include <iostream>\nusing namespace std;\n\nclass Solution {\npublic:\n    string minWindow(string s, string t) {\n        \n    }\n};\n\nint main() {\n    Solution sol;\n    cout << sol.minWindow(\"ADOBECODEBANC\", \"ABC\") << endl;\n}"
+    }
+  },
+  {
+    "id": 1015, "slug": "valid-parentheses", "title": "Valid Parentheses", "neetcode_number": 20,
+    "difficulty": "easy", "category": "stack",
+    "description": "Given a string s containing just the characters '(', ')', '{', '}', '[' and ']', determine if the input string is valid. An input string is valid if: Open brackets must be closed by the same type of brackets. Open brackets must be closed in the correct order. Every close bracket has a corresponding open bracket of the same type.",
+    "examples": [
+      {"input": "s = \"()\"", "output": "true"},
+      {"input": "s = \"()[]{}\"", "output": "true"},
+      {"input": "s = \"(]\"", "output": "false"}
+    ],
+    "constraints": ["1 <= s.length <= 10^4", "s consists of parentheses only '()[]{}'."],
+    "follow_up_hints": ["What data structure naturally handles nested/ordered matching?", "What do you push onto the stack and when do you pop?"],
+    "starter_code": {
+      "python": "class Solution:\n    def isValid(self, s: str) -> bool:\n        pass\n\nsol = Solution()\nprint(sol.isValid(\"()\"))     # True\nprint(sol.isValid(\"()[]{}\")) # True\nprint(sol.isValid(\"(]\"))     # False",
+      "javascript": "/**\n * @param {string} s\n * @return {boolean}\n */\nvar isValid = function(s) {\n    \n};\n\nconsole.log(isValid(\"()\"));      // true\nconsole.log(isValid(\"()[]{}\"));  // true\nconsole.log(isValid(\"(]\"));      // false",
+      "java": "import java.util.*;\n\nclass Solution {\n    public boolean isValid(String s) {\n        \n    }\n\n    public static void main(String[] args) {\n        Solution sol = new Solution();\n        System.out.println(sol.isValid(\"()[]{}\"));\n    }\n}",
+      "cpp": "#include <string>\n#include <stack>\n#include <iostream>\nusing namespace std;\n\nclass Solution {\npublic:\n    bool isValid(string s) {\n        \n    }\n};\n\nint main() {\n    Solution sol;\n    cout << sol.isValid(\"()[]{}\") << endl;\n}"
+    }
+  },
+  {
+    "id": 1016, "slug": "min-stack", "title": "Min Stack", "neetcode_number": 21,
+    "difficulty": "medium", "category": "stack",
+    "description": "Design a stack that supports push, pop, top, and retrieving the minimum element in constant time. Implement the MinStack class: MinStack() initializes the stack object. void push(int val) pushes the element val onto the stack. void pop() removes the element on the top of the stack. int top() gets the top element of the stack. int getMin() retrieves the minimum element in the stack. You must implement a solution with O(1) time complexity for each function.",
+    "examples": [
+      {"input": "MinStack minStack = new MinStack();\nminStack.push(-2);\nminStack.push(0);\nminStack.push(-3);\nminStack.getMin(); // return -3\nminStack.pop();\nminStack.top();    // return 0\nminStack.getMin(); // return -2", "output": "[-3, 0, -2]"}
+    ],
+    "constraints": ["-2^31 <= val <= 2^31 - 1", "Methods pop, top and getMin operations will always be called on non-empty stacks.", "At most 3 * 10^4 calls will be made to push, pop, top, and getMin."],
+    "follow_up_hints": ["How do you track the minimum without scanning the whole stack?", "Think about using a second stack that tracks minimums."],
+    "starter_code": {
+      "python": "class MinStack:\n    def __init__(self):\n        pass\n\n    def push(self, val: int) -> None:\n        pass\n\n    def pop(self) -> None:\n        pass\n\n    def top(self) -> int:\n        pass\n\n    def getMin(self) -> int:\n        pass\n\nstack = MinStack()\nstack.push(-2)\nstack.push(0)\nstack.push(-3)\nprint(stack.getMin())  # -3\nstack.pop()\nprint(stack.top())     # 0\nprint(stack.getMin())  # -2",
+      "javascript": "class MinStack {\n    constructor() {\n        \n    }\n\n    push(val) {\n        \n    }\n\n    pop() {\n        \n    }\n\n    top() {\n        \n    }\n\n    getMin() {\n        \n    }\n}\n\nconst stack = new MinStack();\nstack.push(-2); stack.push(0); stack.push(-3);\nconsole.log(stack.getMin()); // -3\nstack.pop();\nconsole.log(stack.top());    // 0\nconsole.log(stack.getMin()); // -2",
+      "java": "import java.util.*;\n\nclass MinStack {\n    public MinStack() {\n        \n    }\n\n    public void push(int val) {\n        \n    }\n\n    public void pop() {\n        \n    }\n\n    public int top() {\n        return 0;\n    }\n\n    public int getMin() {\n        return 0;\n    }\n\n    public static void main(String[] args) {\n        MinStack stack = new MinStack();\n        stack.push(-2); stack.push(0); stack.push(-3);\n        System.out.println(stack.getMin()); // -3\n        stack.pop();\n        System.out.println(stack.top());    // 0\n        System.out.println(stack.getMin()); // -2\n    }\n}",
+      "cpp": "#include <stack>\n#include <iostream>\nusing namespace std;\n\nclass MinStack {\npublic:\n    MinStack() {\n        \n    }\n\n    void push(int val) {\n        \n    }\n\n    void pop() {\n        \n    }\n\n    int top() {\n        return 0;\n    }\n\n    int getMin() {\n        return 0;\n    }\n};\n\nint main() {\n    MinStack stack;\n    stack.push(-2); stack.push(0); stack.push(-3);\n    cout << stack.getMin() << endl; // -3\n    stack.pop();\n    cout << stack.top() << endl;    // 0\n    cout << stack.getMin() << endl; // -2\n}"
+    }
+  },
+  {
+    "id": 1017, "slug": "daily-temperatures", "title": "Daily Temperatures", "neetcode_number": 23,
+    "difficulty": "medium", "category": "stack",
+    "description": "Given an array of integers temperatures represents the daily temperatures, return an array answer such that answer[i] is the number of days you have to wait after the ith day to get a warmer temperature. If there is no future day for which this is possible, keep answer[i] == 0 instead.",
+    "examples": [
+      {"input": "temperatures = [73,74,75,71,69,72,76,73]", "output": "[1,1,4,2,1,1,0,0]"},
+      {"input": "temperatures = [30,40,50,60]", "output": "[1,1,1,0]"}
+    ],
+    "constraints": ["1 <= temperatures.length <= 10^5", "30 <= temperatures[i] <= 100"],
+    "follow_up_hints": ["What does the monotonic stack store — indices or temperatures?", "Why do we process from the current day forward rather than backward?"],
+    "starter_code": {
+      "python": "from typing import List\n\nclass Solution:\n    def dailyTemperatures(self, temperatures: List[int]) -> List[int]:\n        pass\n\ns = Solution()\nprint(s.dailyTemperatures([73,74,75,71,69,72,76,73]))  # [1,1,4,2,1,1,0,0]\nprint(s.dailyTemperatures([30,40,50,60]))               # [1,1,1,0]",
+      "javascript": "/**\n * @param {number[]} temperatures\n * @return {number[]}\n */\nvar dailyTemperatures = function(temperatures) {\n    \n};\n\nconsole.log(dailyTemperatures([73,74,75,71,69,72,76,73]));\nconsole.log(dailyTemperatures([30,40,50,60]));",
+      "java": "import java.util.*;\n\nclass Solution {\n    public int[] dailyTemperatures(int[] temperatures) {\n        \n    }\n\n    public static void main(String[] args) {\n        Solution s = new Solution();\n        System.out.println(Arrays.toString(s.dailyTemperatures(new int[]{73,74,75,71,69,72,76,73})));\n    }\n}",
+      "cpp": "#include <vector>\n#include <stack>\n#include <iostream>\nusing namespace std;\n\nclass Solution {\npublic:\n    vector<int> dailyTemperatures(vector<int>& temperatures) {\n        \n    }\n};\n\nint main() {\n    Solution s;\n    vector<int> t = {73,74,75,71,69,72,76,73};\n    auto res = s.dailyTemperatures(t);\n    for (int x : res) cout << x << \" \";\n    cout << endl;\n}"
+    }
+  },
+  {
+    "id": 1018, "slug": "binary-search", "title": "Binary Search", "neetcode_number": 27,
+    "difficulty": "easy", "category": "binary-search",
+    "description": "Given an array of integers nums which is sorted in ascending order, and an integer target, write a function to search target in nums. If target exists, then return its index. Otherwise, return -1. You must write an algorithm with O(log n) runtime complexity.",
+    "examples": [
+      {"input": "nums = [-1,0,3,5,9,12], target = 9", "output": "4"},
+      {"input": "nums = [-1,0,3,5,9,12], target = 2", "output": "-1"}
+    ],
+    "constraints": ["1 <= nums.length <= 10^4", "-10^4 < nums[i], target < 10^4", "All the integers in nums are unique.", "nums is sorted in ascending order."],
+    "follow_up_hints": ["What are the exact conditions for the left and right boundary updates?", "Explain the difference between lo <= hi and lo < hi as loop conditions."],
+    "starter_code": {
+      "python": "from typing import List\n\nclass Solution:\n    def search(self, nums: List[int], target: int) -> int:\n        pass\n\ns = Solution()\nprint(s.search([-1,0,3,5,9,12], 9))  # 4\nprint(s.search([-1,0,3,5,9,12], 2))  # -1",
+      "javascript": "/**\n * @param {number[]} nums\n * @param {number} target\n * @return {number}\n */\nvar search = function(nums, target) {\n    \n};\n\nconsole.log(search([-1,0,3,5,9,12], 9));  // 4\nconsole.log(search([-1,0,3,5,9,12], 2));  // -1",
+      "java": "class Solution {\n    public int search(int[] nums, int target) {\n        \n    }\n\n    public static void main(String[] args) {\n        Solution s = new Solution();\n        System.out.println(s.search(new int[]{-1,0,3,5,9,12}, 9));\n    }\n}",
+      "cpp": "#include <vector>\n#include <iostream>\nusing namespace std;\n\nclass Solution {\npublic:\n    int search(vector<int>& nums, int target) {\n        \n    }\n};\n\nint main() {\n    Solution s;\n    vector<int> nums = {-1,0,3,5,9,12};\n    cout << s.search(nums, 9) << endl;\n}"
+    }
+  },
+  {
+    "id": 1019, "slug": "search-in-rotated-sorted-array", "title": "Search in Rotated Sorted Array", "neetcode_number": 29,
+    "difficulty": "medium", "category": "binary-search",
+    "description": "There is an integer array nums sorted in ascending order (with distinct values). Prior to being passed to your function, nums is possibly rotated at an unknown pivot index k. Given the array nums after the possible rotation and an integer target, return the index of target if it is in nums, or -1 if it is not in nums. You must write an algorithm with O(log n) runtime complexity.",
+    "examples": [
+      {"input": "nums = [4,5,6,7,0,1,2], target = 0", "output": "4"},
+      {"input": "nums = [4,5,6,7,0,1,2], target = 3", "output": "-1"},
+      {"input": "nums = [1], target = 0", "output": "-1"}
+    ],
+    "constraints": ["1 <= nums.length <= 5000", "-10^4 <= nums[i] <= 10^4", "All values of nums are unique.", "nums is an ascending array that is possibly rotated.", "-10^4 <= target <= 10^4"],
+    "follow_up_hints": ["At each mid point, at least one half of the array is always sorted. Which half?", "How do you determine which half to search based on the target value?"],
+    "starter_code": {
+      "python": "from typing import List\n\nclass Solution:\n    def search(self, nums: List[int], target: int) -> int:\n        pass\n\ns = Solution()\nprint(s.search([4,5,6,7,0,1,2], 0))  # 4\nprint(s.search([4,5,6,7,0,1,2], 3))  # -1",
+      "javascript": "/**\n * @param {number[]} nums\n * @param {number} target\n * @return {number}\n */\nvar search = function(nums, target) {\n    \n};\n\nconsole.log(search([4,5,6,7,0,1,2], 0)); // 4\nconsole.log(search([4,5,6,7,0,1,2], 3)); // -1",
+      "java": "class Solution {\n    public int search(int[] nums, int target) {\n        \n    }\n\n    public static void main(String[] args) {\n        Solution s = new Solution();\n        System.out.println(s.search(new int[]{4,5,6,7,0,1,2}, 0));\n    }\n}",
+      "cpp": "#include <vector>\n#include <iostream>\nusing namespace std;\n\nclass Solution {\npublic:\n    int search(vector<int>& nums, int target) {\n        \n    }\n};\n\nint main() {\n    Solution s;\n    vector<int> nums = {4,5,6,7,0,1,2};\n    cout << s.search(nums, 0) << endl;\n}"
+    }
+  },
+  {
+    "id": 1020, "slug": "find-minimum-in-rotated-sorted-array", "title": "Find Minimum in Rotated Sorted Array", "neetcode_number": 28,
+    "difficulty": "medium", "category": "binary-search",
+    "description": "Suppose an array of length n sorted in ascending order is rotated between 1 and n times. Given the sorted rotated array nums of unique elements, return the minimum element of this array. You must write an algorithm that runs in O(log n) time.",
+    "examples": [
+      {"input": "nums = [3,4,5,1,2]", "output": "1"},
+      {"input": "nums = [4,5,6,7,0,1,2]", "output": "0"},
+      {"input": "nums = [11,13,15,17]", "output": "11"}
+    ],
+    "constraints": ["n == nums.length", "1 <= n <= 5000", "-5000 <= nums[i] <= 5000", "All the integers of nums are unique.", "nums is sorted and rotated between 1 and n times."],
+    "follow_up_hints": ["How do you know which half contains the minimum?", "What does it mean when nums[mid] > nums[right]?"],
+    "starter_code": {
+      "python": "from typing import List\n\nclass Solution:\n    def findMin(self, nums: List[int]) -> int:\n        pass\n\ns = Solution()\nprint(s.findMin([3,4,5,1,2]))     # 1\nprint(s.findMin([4,5,6,7,0,1,2])) # 0\nprint(s.findMin([11,13,15,17]))   # 11",
+      "javascript": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar findMin = function(nums) {\n    \n};\n\nconsole.log(findMin([3,4,5,1,2]));     // 1\nconsole.log(findMin([4,5,6,7,0,1,2])); // 0",
+      "java": "class Solution {\n    public int findMin(int[] nums) {\n        \n    }\n\n    public static void main(String[] args) {\n        Solution s = new Solution();\n        System.out.println(s.findMin(new int[]{3,4,5,1,2}));\n    }\n}",
+      "cpp": "#include <vector>\n#include <iostream>\nusing namespace std;\n\nclass Solution {\npublic:\n    int findMin(vector<int>& nums) {\n        \n    }\n};\n\nint main() {\n    Solution s;\n    vector<int> nums = {3,4,5,1,2};\n    cout << s.findMin(nums) << endl;\n}"
+    }
+  },
+  {
+    "id": 1021, "slug": "reverse-linked-list", "title": "Reverse Linked List", "neetcode_number": 33,
+    "difficulty": "easy", "category": "linked-list",
+    "description": "Given the head of a singly linked list, reverse the list, and return the reversed list.",
+    "examples": [
+      {"input": "head = [1,2,3,4,5]", "output": "[5,4,3,2,1]"},
+      {"input": "head = [1,2]", "output": "[2,1]"},
+      {"input": "head = []", "output": "[]"}
+    ],
+    "constraints": ["The number of nodes in the list is the range [0, 5000].", "-5000 <= Node.val <= 5000"],
+    "follow_up_hints": ["Can you solve it both iteratively and recursively?", "Walk me through the pointer manipulation step by step."],
+    "starter_code": {
+      "python": "from typing import Optional\n\nclass ListNode:\n    def __init__(self, val=0, next=None):\n        self.val = val\n        self.next = next\n\nclass Solution:\n    def reverseList(self, head: Optional[ListNode]) -> Optional[ListNode]:\n        pass\n\ndef make_list(arr):\n    dummy = ListNode()\n    cur = dummy\n    for v in arr:\n        cur.next = ListNode(v)\n        cur = cur.next\n    return dummy.next\n\ndef print_list(head):\n    res = []\n    while head:\n        res.append(head.val)\n        head = head.next\n    print(res)\n\ns = Solution()\nprint_list(s.reverseList(make_list([1,2,3,4,5])))  # [5,4,3,2,1]",
+      "javascript": "class ListNode {\n    constructor(val = 0, next = null) {\n        this.val = val;\n        this.next = next;\n    }\n}\n\n/**\n * @param {ListNode} head\n * @return {ListNode}\n */\nvar reverseList = function(head) {\n    \n};\n\nfunction makeList(arr) {\n    let dummy = new ListNode();\n    let cur = dummy;\n    for (let v of arr) { cur.next = new ListNode(v); cur = cur.next; }\n    return dummy.next;\n}\nfunction printList(head) {\n    let res = [];\n    while (head) { res.push(head.val); head = head.next; }\n    console.log(res);\n}\nprintList(reverseList(makeList([1,2,3,4,5])));",
+      "java": "class ListNode {\n    int val;\n    ListNode next;\n    ListNode(int val) { this.val = val; }\n}\n\nclass Solution {\n    public ListNode reverseList(ListNode head) {\n        \n    }\n\n    public static void main(String[] args) {\n        // Build list 1->2->3->4->5\n        ListNode head = new ListNode(1);\n        head.next = new ListNode(2);\n        head.next.next = new ListNode(3);\n        head.next.next.next = new ListNode(4);\n        head.next.next.next.next = new ListNode(5);\n        Solution s = new Solution();\n        ListNode res = s.reverseList(head);\n        while (res != null) { System.out.print(res.val + \" \"); res = res.next; }\n    }\n}",
+      "cpp": "#include <iostream>\nusing namespace std;\n\nstruct ListNode {\n    int val;\n    ListNode* next;\n    ListNode(int val) : val(val), next(nullptr) {}\n};\n\nclass Solution {\npublic:\n    ListNode* reverseList(ListNode* head) {\n        \n    }\n};\n\nint main() {\n    ListNode* head = new ListNode(1);\n    head->next = new ListNode(2);\n    head->next->next = new ListNode(3);\n    Solution s;\n    ListNode* res = s.reverseList(head);\n    while (res) { cout << res->val << \" \"; res = res->next; }\n    cout << endl;\n}"
+    }
+  },
+  {
+    "id": 1022, "slug": "merge-two-sorted-lists", "title": "Merge Two Sorted Lists", "neetcode_number": 34,
+    "difficulty": "easy", "category": "linked-list",
+    "description": "You are given the heads of two sorted linked lists list1 and list2. Merge the two lists into one sorted list. The list should be made by splicing together the nodes of the first two lists. Return the head of the merged linked list.",
+    "examples": [
+      {"input": "list1 = [1,2,4], list2 = [1,3,4]", "output": "[1,1,2,3,4,4]"},
+      {"input": "list1 = [], list2 = []", "output": "[]"}
+    ],
+    "constraints": ["The number of nodes in both lists is in the range [0, 50].", "-100 <= Node.val <= 100", "Both list1 and list2 are sorted in non-decreasing order."],
+    "follow_up_hints": ["Can you solve this recursively? What is the base case?", "What's the time and space complexity of the recursive vs iterative approach?"],
+    "starter_code": {
+      "python": "from typing import Optional\n\nclass ListNode:\n    def __init__(self, val=0, next=None):\n        self.val = val\n        self.next = next\n\nclass Solution:\n    def mergeTwoLists(self, list1: Optional[ListNode], list2: Optional[ListNode]) -> Optional[ListNode]:\n        pass\n\ndef make_list(arr):\n    dummy = ListNode()\n    cur = dummy\n    for v in arr:\n        cur.next = ListNode(v)\n        cur = cur.next\n    return dummy.next\n\ndef print_list(head):\n    res = []\n    while head:\n        res.append(head.val)\n        head = head.next\n    print(res)\n\ns = Solution()\nprint_list(s.mergeTwoLists(make_list([1,2,4]), make_list([1,3,4])))  # [1,1,2,3,4,4]",
+      "javascript": "class ListNode {\n    constructor(val = 0, next = null) { this.val = val; this.next = next; }\n}\n\nvar mergeTwoLists = function(list1, list2) {\n    \n};\n\nfunction makeList(arr) {\n    let d = new ListNode(); let c = d;\n    for (let v of arr) { c.next = new ListNode(v); c = c.next; }\n    return d.next;\n}\nfunction printList(h) {\n    let r = []; while (h) { r.push(h.val); h = h.next; } console.log(r);\n}\nprintList(mergeTwoLists(makeList([1,2,4]), makeList([1,3,4])));",
+      "java": "class ListNode { int val; ListNode next; ListNode(int v){val=v;} }\n\nclass Solution {\n    public ListNode mergeTwoLists(ListNode list1, ListNode list2) {\n        \n    }\n\n    public static void main(String[] args) {\n        ListNode l1 = new ListNode(1); l1.next = new ListNode(2); l1.next.next = new ListNode(4);\n        ListNode l2 = new ListNode(1); l2.next = new ListNode(3); l2.next.next = new ListNode(4);\n        Solution s = new Solution();\n        ListNode res = s.mergeTwoLists(l1, l2);\n        while (res != null) { System.out.print(res.val + \" \"); res = res.next; }\n    }\n}",
+      "cpp": "#include <iostream>\nusing namespace std;\nstruct ListNode { int val; ListNode* next; ListNode(int v):val(v),next(nullptr){} };\n\nclass Solution {\npublic:\n    ListNode* mergeTwoLists(ListNode* list1, ListNode* list2) {\n        \n    }\n};\n\nint main() {\n    ListNode* l1 = new ListNode(1); l1->next = new ListNode(2); l1->next->next = new ListNode(4);\n    ListNode* l2 = new ListNode(1); l2->next = new ListNode(3); l2->next->next = new ListNode(4);\n    Solution s;\n    auto res = s.mergeTwoLists(l1, l2);\n    while (res) { cout << res->val << \" \"; res = res->next; }\n    cout << endl;\n}"
+    }
+  },
+  {
+    "id": 1023, "slug": "linked-list-cycle", "title": "Linked List Cycle", "neetcode_number": 37,
+    "difficulty": "easy", "category": "linked-list",
+    "description": "Given head, the head of a linked list, determine if the linked list has a cycle in it. There is a cycle in a linked list if there is some node in the list that can be reached again by continuously following the next pointer. Return true if there is a cycle in the linked list, otherwise, return false.",
+    "examples": [
+      {"input": "head = [3,2,0,-4], pos = 1", "output": "true", "explanation": "There is a cycle in the linked list, where the tail connects to the 1st node (0-indexed)."},
+      {"input": "head = [1,2], pos = 0", "output": "true"},
+      {"input": "head = [1], pos = -1", "output": "false"}
+    ],
+    "constraints": ["The number of the nodes in the list is in the range [0, 10^4].", "-10^5 <= Node.val <= 10^5"],
+    "follow_up_hints": ["Explain Floyd's Tortoise and Hare algorithm.", "Why does the fast pointer catching the slow pointer prove a cycle exists?"],
+    "starter_code": {
+      "python": "from typing import Optional\n\nclass ListNode:\n    def __init__(self, x):\n        self.val = x\n        self.next = None\n\nclass Solution:\n    def hasCycle(self, head: Optional[ListNode]) -> bool:\n        pass\n\n# Test with a cycle: 3->2->0->-4->2 (cycle at index 1)\nhead = ListNode(3)\nhead.next = ListNode(2)\nhead.next.next = ListNode(0)\nhead.next.next.next = ListNode(-4)\nhead.next.next.next.next = head.next  # cycle\ns = Solution()\nprint(s.hasCycle(head))  # True",
+      "javascript": "class ListNode {\n    constructor(val) { this.val = val; this.next = null; }\n}\n\nvar hasCycle = function(head) {\n    \n};\n\nconst head = new ListNode(3);\nhead.next = new ListNode(2);\nhead.next.next = new ListNode(0);\nhead.next.next.next = new ListNode(-4);\nhead.next.next.next.next = head.next; // cycle\nconsole.log(hasCycle(head)); // true",
+      "java": "class ListNode { int val; ListNode next; ListNode(int x){ val = x; } }\n\nclass Solution {\n    public boolean hasCycle(ListNode head) {\n        \n    }\n\n    public static void main(String[] args) {\n        ListNode head = new ListNode(3);\n        head.next = new ListNode(2);\n        head.next.next = new ListNode(0);\n        head.next.next.next = new ListNode(-4);\n        head.next.next.next.next = head.next;\n        System.out.println(new Solution().hasCycle(head)); // true\n    }\n}",
+      "cpp": "#include <iostream>\nusing namespace std;\nstruct ListNode { int val; ListNode* next; ListNode(int x):val(x),next(nullptr){} };\n\nclass Solution {\npublic:\n    bool hasCycle(ListNode* head) {\n        \n    }\n};\n\nint main() {\n    ListNode* head = new ListNode(3);\n    head->next = new ListNode(2);\n    head->next->next = new ListNode(0);\n    head->next->next->next = new ListNode(-4);\n    head->next->next->next->next = head->next;\n    cout << Solution().hasCycle(head) << endl;\n}"
+    }
+  },
+  {
+    "id": 1024, "slug": "reorder-list", "title": "Reorder List", "neetcode_number": 35,
+    "difficulty": "medium", "category": "linked-list",
+    "description": "You are given the head of a singly linked-list: L0 → L1 → … → Ln-1 → Ln. Reorder it to: L0 → Ln → L1 → Ln-1 → L2 → Ln-2 → … You may not modify the values in the list's nodes. Only nodes themselves may be changed.",
+    "examples": [
+      {"input": "head = [1,2,3,4]", "output": "[1,4,2,3]"},
+      {"input": "head = [1,2,3,4,5]", "output": "[1,5,2,4,3]"}
+    ],
+    "constraints": ["The number of nodes in the list is in the range [1, 5 * 10^4].", "1 <= Node.val <= 1000"],
+    "follow_up_hints": ["What are the three steps needed? Find middle, reverse second half, merge.", "Why can't you just use indices or an array here — what's the constraint?"],
+    "starter_code": {
+      "python": "from typing import Optional\n\nclass ListNode:\n    def __init__(self, val=0, next=None):\n        self.val = val\n        self.next = next\n\nclass Solution:\n    def reorderList(self, head: Optional[ListNode]) -> None:\n        pass\n\ndef make_list(arr):\n    d = ListNode(); c = d\n    for v in arr: c.next = ListNode(v); c = c.next\n    return d.next\n\ndef print_list(h):\n    r = []\n    while h: r.append(h.val); h = h.next\n    print(r)\n\nhead = make_list([1,2,3,4])\nSolution().reorderList(head)\nprint_list(head)  # [1,4,2,3]",
+      "javascript": "class ListNode { constructor(val=0,next=null){this.val=val;this.next=next;} }\n\nvar reorderList = function(head) {\n    \n};\n\nfunction makeList(arr){let d=new ListNode();let c=d;for(let v of arr){c.next=new ListNode(v);c=c.next;}return d.next;}\nfunction printList(h){let r=[];while(h){r.push(h.val);h=h.next;}console.log(r);}\nconst head=makeList([1,2,3,4]);\nreorderList(head);\nprintList(head); // [1,4,2,3]",
+      "java": "class ListNode{int val;ListNode next;ListNode(int v){val=v;}}\nclass Solution {\n    public void reorderList(ListNode head) {\n        \n    }\n    public static void main(String[] args) {\n        ListNode h=new ListNode(1);h.next=new ListNode(2);h.next.next=new ListNode(3);h.next.next.next=new ListNode(4);\n        new Solution().reorderList(h);\n        while(h!=null){System.out.print(h.val+\" \");h=h.next;}\n    }\n}",
+      "cpp": "#include <iostream>\nusing namespace std;\nstruct ListNode{int val;ListNode*next;ListNode(int v):val(v),next(nullptr){}};\nclass Solution{\npublic:\n    void reorderList(ListNode* head){\n        \n    }\n};\nint main(){\n    ListNode*h=new ListNode(1);h->next=new ListNode(2);h->next->next=new ListNode(3);h->next->next->next=new ListNode(4);\n    Solution().reorderList(h);\n    while(h){cout<<h->val<<\" \";h=h->next;}\n    cout<<endl;\n}"
+    }
+  },
+  {
+    "id": 1025, "slug": "invert-binary-tree", "title": "Invert Binary Tree", "neetcode_number": 41,
+    "difficulty": "easy", "category": "trees",
+    "description": "Given the root of a binary tree, invert the tree, and return its root.",
+    "examples": [
+      {"input": "root = [4,2,7,1,3,6,9]", "output": "[4,7,2,9,6,3,1]"},
+      {"input": "root = [2,1,3]", "output": "[2,3,1]"},
+      {"input": "root = []", "output": "[]"}
+    ],
+    "constraints": ["The number of nodes in the tree is in the range [0, 100].", "-100 <= Node.val <= 100"],
+    "follow_up_hints": ["Can you solve this recursively and iteratively?", "What is the time and space complexity of each approach?"],
+    "starter_code": {
+      "python": "from typing import Optional\n\nclass TreeNode:\n    def __init__(self, val=0, left=None, right=None):\n        self.val = val\n        self.left = left\n        self.right = right\n\nclass Solution:\n    def invertTree(self, root: Optional[TreeNode]) -> Optional[TreeNode]:\n        pass\n\nroot = TreeNode(4, TreeNode(2, TreeNode(1), TreeNode(3)), TreeNode(7, TreeNode(6), TreeNode(9)))\ndef level_order(r):\n    if not r: return []\n    from collections import deque\n    q, res = deque([r]), []\n    while q:\n        node = q.popleft()\n        res.append(node.val)\n        if node.left: q.append(node.left)\n        if node.right: q.append(node.right)\n    return res\n\nprint(level_order(Solution().invertTree(root)))  # [4,7,2,9,6,3,1]",
+      "javascript": "class TreeNode { constructor(val=0,left=null,right=null){this.val=val;this.left=left;this.right=right;} }\n\nvar invertTree = function(root) {\n    \n};\n\nconst root = new TreeNode(4, new TreeNode(2, new TreeNode(1), new TreeNode(3)), new TreeNode(7, new TreeNode(6), new TreeNode(9)));\nfunction levelOrder(r){if(!r)return[];const q=[r],res=[];while(q.length){const n=q.shift();res.push(n.val);if(n.left)q.push(n.left);if(n.right)q.push(n.right);}return res;}\nconsole.log(levelOrder(invertTree(root))); // [4,7,2,9,6,3,1]",
+      "java": "import java.util.*;\nclass TreeNode{int val;TreeNode left,right;TreeNode(int v){val=v;}TreeNode(int v,TreeNode l,TreeNode r){val=v;left=l;right=r;}}\nclass Solution{\n    public TreeNode invertTree(TreeNode root){\n        \n    }\n    public static void main(String[] args){\n        TreeNode root=new TreeNode(4,new TreeNode(2,new TreeNode(1),new TreeNode(3)),new TreeNode(7,new TreeNode(6),new TreeNode(9)));\n        TreeNode res=new Solution().invertTree(root);\n        Queue<TreeNode> q=new LinkedList<>();q.add(res);\n        while(!q.isEmpty()){TreeNode n=q.poll();System.out.print(n.val+\" \");if(n.left!=null)q.add(n.left);if(n.right!=null)q.add(n.right);}\n    }\n}",
+      "cpp": "#include <queue>\n#include <iostream>\nusing namespace std;\nstruct TreeNode{int val;TreeNode*left,*right;TreeNode(int v):val(v),left(nullptr),right(nullptr){}TreeNode(int v,TreeNode*l,TreeNode*r):val(v),left(l),right(r){}};\nclass Solution{\npublic:\n    TreeNode* invertTree(TreeNode* root){\n        \n    }\n};\nint main(){\n    TreeNode*root=new TreeNode(4,new TreeNode(2,new TreeNode(1),new TreeNode(3)),new TreeNode(7,new TreeNode(6),new TreeNode(9)));\n    TreeNode*res=Solution().invertTree(root);\n    queue<TreeNode*>q;q.push(res);\n    while(!q.empty()){auto n=q.front();q.pop();cout<<n->val<<\" \";if(n->left)q.push(n->left);if(n->right)q.push(n->right);}\n    cout<<endl;\n}"
+    }
+  },
+  {
+    "id": 1026, "slug": "maximum-depth-of-binary-tree", "title": "Maximum Depth of Binary Tree", "neetcode_number": 42,
+    "difficulty": "easy", "category": "trees",
+    "description": "Given the root of a binary tree, return its maximum depth. A binary tree's maximum depth is the number of nodes along the longest path from the root node down to the farthest leaf node.",
+    "examples": [
+      {"input": "root = [3,9,20,null,null,15,7]", "output": "3"},
+      {"input": "root = [1,null,2]", "output": "2"}
+    ],
+    "constraints": ["The number of nodes in the tree is in the range [0, 10^4].", "-100 <= Node.val <= 100"],
+    "follow_up_hints": ["Can you solve this with both DFS and BFS?", "What does the recursive call stack look like for DFS on this problem?"],
+    "starter_code": {
+      "python": "from typing import Optional\n\nclass TreeNode:\n    def __init__(self, val=0, left=None, right=None):\n        self.val = val\n        self.left = left\n        self.right = right\n\nclass Solution:\n    def maxDepth(self, root: Optional[TreeNode]) -> int:\n        pass\n\nroot = TreeNode(3, TreeNode(9), TreeNode(20, TreeNode(15), TreeNode(7)))\nprint(Solution().maxDepth(root))  # 3",
+      "javascript": "class TreeNode{constructor(val=0,left=null,right=null){this.val=val;this.left=left;this.right=right;}}\nvar maxDepth = function(root) {\n    \n};\nconst root=new TreeNode(3,new TreeNode(9),new TreeNode(20,new TreeNode(15),new TreeNode(7)));\nconsole.log(maxDepth(root)); // 3",
+      "java": "class TreeNode{int val;TreeNode left,right;TreeNode(int v){val=v;}TreeNode(int v,TreeNode l,TreeNode r){val=v;left=l;right=r;}}\nclass Solution{\n    public int maxDepth(TreeNode root){\n        \n    }\n    public static void main(String[] args){\n        TreeNode root=new TreeNode(3,new TreeNode(9),new TreeNode(20,new TreeNode(15),new TreeNode(7)));\n        System.out.println(new Solution().maxDepth(root)); // 3\n    }\n}",
+      "cpp": "#include <iostream>\nusing namespace std;\nstruct TreeNode{int val;TreeNode*left,*right;TreeNode(int v):val(v),left(nullptr),right(nullptr){}TreeNode(int v,TreeNode*l,TreeNode*r):val(v),left(l),right(r){}};\nclass Solution{\npublic:\n    int maxDepth(TreeNode* root){\n        \n    }\n};\nint main(){\n    TreeNode*root=new TreeNode(3,new TreeNode(9),new TreeNode(20,new TreeNode(15),new TreeNode(7)));\n    cout<<Solution().maxDepth(root)<<endl;\n}"
+    }
+  },
+  {
+    "id": 1027, "slug": "same-tree", "title": "Same Tree", "neetcode_number": 43,
+    "difficulty": "easy", "category": "trees",
+    "description": "Given the roots of two binary trees p and q, write a function to check if they are the same or not. Two binary trees are considered the same if they are structurally identical, and the nodes have the same value.",
+    "examples": [
+      {"input": "p = [1,2,3], q = [1,2,3]", "output": "true"},
+      {"input": "p = [1,2], q = [1,null,2]", "output": "false"},
+      {"input": "p = [1,2,1], q = [1,1,2]", "output": "false"}
+    ],
+    "constraints": ["The number of nodes in both trees is in the range [0, 100].", "-10^4 <= Node.val <= 10^4"],
+    "follow_up_hints": ["What are all the base cases you need to handle?", "When can you return true immediately vs when do you need to recurse?"],
+    "starter_code": {
+      "python": "from typing import Optional\n\nclass TreeNode:\n    def __init__(self, val=0, left=None, right=None):\n        self.val = val; self.left = left; self.right = right\n\nclass Solution:\n    def isSameTree(self, p: Optional[TreeNode], q: Optional[TreeNode]) -> bool:\n        pass\n\np=TreeNode(1,TreeNode(2),TreeNode(3))\nq=TreeNode(1,TreeNode(2),TreeNode(3))\nprint(Solution().isSameTree(p,q))  # True",
+      "javascript": "class TreeNode{constructor(val=0,left=null,right=null){this.val=val;this.left=left;this.right=right;}}\nvar isSameTree=function(p,q){\n    \n};\nconst p=new TreeNode(1,new TreeNode(2),new TreeNode(3));\nconst q=new TreeNode(1,new TreeNode(2),new TreeNode(3));\nconsole.log(isSameTree(p,q)); // true",
+      "java": "class TreeNode{int val;TreeNode left,right;TreeNode(int v){val=v;}TreeNode(int v,TreeNode l,TreeNode r){val=v;left=l;right=r;}}\nclass Solution{\n    public boolean isSameTree(TreeNode p,TreeNode q){\n        \n    }\n    public static void main(String[] args){\n        TreeNode p=new TreeNode(1,new TreeNode(2),new TreeNode(3));\n        TreeNode q=new TreeNode(1,new TreeNode(2),new TreeNode(3));\n        System.out.println(new Solution().isSameTree(p,q));\n    }\n}",
+      "cpp": "#include <iostream>\nusing namespace std;\nstruct TreeNode{int val;TreeNode*left,*right;TreeNode(int v):val(v),left(nullptr),right(nullptr){}TreeNode(int v,TreeNode*l,TreeNode*r):val(v),left(l),right(r){}};\nclass Solution{\npublic:\n    bool isSameTree(TreeNode*p,TreeNode*q){\n        \n    }\n};\nint main(){\n    TreeNode*p=new TreeNode(1,new TreeNode(2),new TreeNode(3));\n    TreeNode*q=new TreeNode(1,new TreeNode(2),new TreeNode(3));\n    cout<<Solution().isSameTree(p,q)<<endl;\n}"
+    }
+  },
+  {
+    "id": 1028, "slug": "binary-tree-level-order-traversal", "title": "Binary Tree Level Order Traversal", "neetcode_number": 48,
+    "difficulty": "medium", "category": "trees",
+    "description": "Given the root of a binary tree, return the level order traversal of its nodes' values (i.e., from left to right, level by level).",
+    "examples": [
+      {"input": "root = [3,9,20,null,null,15,7]", "output": "[[3],[9,20],[15,7]]"},
+      {"input": "root = [1]", "output": "[[1]]"},
+      {"input": "root = []", "output": "[]"}
+    ],
+    "constraints": ["The number of nodes in the tree is in the range [0, 2000].", "-1000 <= Node.val <= 1000"],
+    "follow_up_hints": ["How do you know when one level ends and the next begins in a BFS queue?", "What's the role of the queue size snapshot at the start of each level?"],
+    "starter_code": {
+      "python": "from typing import Optional, List\nfrom collections import deque\n\nclass TreeNode:\n    def __init__(self, val=0, left=None, right=None):\n        self.val = val; self.left = left; self.right = right\n\nclass Solution:\n    def levelOrder(self, root: Optional[TreeNode]) -> List[List[int]]:\n        pass\n\nroot=TreeNode(3,TreeNode(9),TreeNode(20,TreeNode(15),TreeNode(7)))\nprint(Solution().levelOrder(root))  # [[3],[9,20],[15,7]]",
+      "javascript": "class TreeNode{constructor(val=0,left=null,right=null){this.val=val;this.left=left;this.right=right;}}\nvar levelOrder=function(root){\n    \n};\nconst root=new TreeNode(3,new TreeNode(9),new TreeNode(20,new TreeNode(15),new TreeNode(7)));\nconsole.log(JSON.stringify(levelOrder(root)));",
+      "java": "import java.util.*;\nclass TreeNode{int val;TreeNode left,right;TreeNode(int v){val=v;}TreeNode(int v,TreeNode l,TreeNode r){val=v;left=l;right=r;}}\nclass Solution{\n    public List<List<Integer>> levelOrder(TreeNode root){\n        \n    }\n    public static void main(String[] args){\n        TreeNode root=new TreeNode(3,new TreeNode(9),new TreeNode(20,new TreeNode(15),new TreeNode(7)));\n        System.out.println(new Solution().levelOrder(root));\n    }\n}",
+      "cpp": "#include <vector>\n#include <queue>\n#include <iostream>\nusing namespace std;\nstruct TreeNode{int val;TreeNode*left,*right;TreeNode(int v):val(v),left(nullptr),right(nullptr){}TreeNode(int v,TreeNode*l,TreeNode*r):val(v),left(l),right(r){}};\nclass Solution{\npublic:\n    vector<vector<int>> levelOrder(TreeNode* root){\n        \n    }\n};\nint main(){\n    TreeNode*root=new TreeNode(3,new TreeNode(9),new TreeNode(20,new TreeNode(15),new TreeNode(7)));\n    auto res=Solution().levelOrder(root);\n    for(auto&level:res){for(int v:level)cout<<v<<\" \";cout<<\"|\";}cout<<endl;\n}"
+    }
+  },
+  {
+    "id": 1029, "slug": "validate-binary-search-tree", "title": "Validate Binary Search Tree", "neetcode_number": 50,
+    "difficulty": "medium", "category": "trees",
+    "description": "Given the root of a binary tree, determine if it is a valid binary search tree (BST). A valid BST is defined as follows: The left subtree of a node contains only nodes with keys less than the node's key. The right subtree of a node contains only nodes with keys greater than the node's key. Both the left and right subtrees must also be binary search trees.",
+    "examples": [
+      {"input": "root = [2,1,3]", "output": "true"},
+      {"input": "root = [5,1,4,null,null,3,6]", "output": "false", "explanation": "The root node's value is 5 but its right child's value is 4."}
+    ],
+    "constraints": ["The number of nodes in the tree is in the range [1, 10^4].", "-2^31 <= Node.val <= 2^31 - 1"],
+    "follow_up_hints": ["Why doesn't it work to just check if left.val < root.val and right.val > root.val locally?", "How do you pass valid range constraints down the recursion?"],
+    "starter_code": {
+      "python": "from typing import Optional\n\nclass TreeNode:\n    def __init__(self, val=0, left=None, right=None):\n        self.val = val; self.left = left; self.right = right\n\nclass Solution:\n    def isValidBST(self, root: Optional[TreeNode]) -> bool:\n        pass\n\nprint(Solution().isValidBST(TreeNode(2,TreeNode(1),TreeNode(3))))  # True\nprint(Solution().isValidBST(TreeNode(5,TreeNode(1),TreeNode(4,TreeNode(3),TreeNode(6)))))  # False",
+      "javascript": "class TreeNode{constructor(val=0,left=null,right=null){this.val=val;this.left=left;this.right=right;}}\nvar isValidBST=function(root){\n    \n};\nconsole.log(isValidBST(new TreeNode(2,new TreeNode(1),new TreeNode(3)))); // true",
+      "java": "class TreeNode{int val;TreeNode left,right;TreeNode(int v){val=v;}TreeNode(int v,TreeNode l,TreeNode r){val=v;left=l;right=r;}}\nclass Solution{\n    public boolean isValidBST(TreeNode root){\n        \n    }\n    public static void main(String[] args){\n        System.out.println(new Solution().isValidBST(new TreeNode(2,new TreeNode(1),new TreeNode(3))));\n    }\n}",
+      "cpp": "#include <iostream>\n#include <climits>\nusing namespace std;\nstruct TreeNode{int val;TreeNode*left,*right;TreeNode(int v):val(v),left(nullptr),right(nullptr){}TreeNode(int v,TreeNode*l,TreeNode*r):val(v),left(l),right(r){}};\nclass Solution{\npublic:\n    bool isValidBST(TreeNode* root){\n        \n    }\n};\nint main(){\n    cout<<Solution().isValidBST(new TreeNode(2,new TreeNode(1),new TreeNode(3)))<<endl;\n}"
+    }
+  },
+  {
+    "id": 1030, "slug": "lowest-common-ancestor-of-bst", "title": "Lowest Common Ancestor of a Binary Search Tree", "neetcode_number": 51,
+    "difficulty": "medium", "category": "trees",
+    "description": "Given a binary search tree (BST), find the lowest common ancestor (LCA) node of two given nodes in the BST. According to the definition of LCA on Wikipedia: The lowest common ancestor is defined between two nodes p and q as the lowest node in T that has both p and q as descendants (where we allow a node to be a descendant of itself).",
+    "examples": [
+      {"input": "root = [6,2,8,0,4,7,9,null,null,3,5], p = 2, q = 8", "output": "6"},
+      {"input": "root = [6,2,8,0,4,7,9,null,null,3,5], p = 2, q = 4", "output": "2"}
+    ],
+    "constraints": ["The number of nodes in the tree is in the range [2, 10^5].", "-10^9 <= Node.val <= 10^9", "All Node.val are unique.", "p != q", "p and q will exist in the BST."],
+    "follow_up_hints": ["How does the BST property help you navigate without checking every node?", "What are the three cases at each node: both left, both right, or split?"],
+    "starter_code": {
+      "python": "class TreeNode:\n    def __init__(self, x, left=None, right=None):\n        self.val = x; self.left = left; self.right = right\n\nclass Solution:\n    def lowestCommonAncestor(self, root: TreeNode, p: TreeNode, q: TreeNode) -> TreeNode:\n        pass\n\nroot=TreeNode(6,TreeNode(2,TreeNode(0),TreeNode(4,TreeNode(3),TreeNode(5))),TreeNode(8,TreeNode(7),TreeNode(9)))\np=root.left; q=root.right\nprint(Solution().lowestCommonAncestor(root,p,q).val)  # 6",
+      "javascript": "class TreeNode{constructor(val,left=null,right=null){this.val=val;this.left=left;this.right=right;}}\nvar lowestCommonAncestor=function(root,p,q){\n    \n};\nconst root=new TreeNode(6,new TreeNode(2,new TreeNode(0),new TreeNode(4)),new TreeNode(8,new TreeNode(7),new TreeNode(9)));\nconsole.log(lowestCommonAncestor(root,root.left,root.right).val); // 6",
+      "java": "class TreeNode{int val;TreeNode left,right;TreeNode(int v){val=v;}TreeNode(int v,TreeNode l,TreeNode r){val=v;left=l;right=r;}}\nclass Solution{\n    public TreeNode lowestCommonAncestor(TreeNode root,TreeNode p,TreeNode q){\n        \n    }\n    public static void main(String[] args){\n        TreeNode root=new TreeNode(6,new TreeNode(2,new TreeNode(0),new TreeNode(4)),new TreeNode(8,new TreeNode(7),new TreeNode(9)));\n        System.out.println(new Solution().lowestCommonAncestor(root,root.left,root.right).val);\n    }\n}",
+      "cpp": "#include <iostream>\nusing namespace std;\nstruct TreeNode{int val;TreeNode*left,*right;TreeNode(int v):val(v),left(nullptr),right(nullptr){}TreeNode(int v,TreeNode*l,TreeNode*r):val(v),left(l),right(r){}};\nclass Solution{\npublic:\n    TreeNode* lowestCommonAncestor(TreeNode* root,TreeNode* p,TreeNode* q){\n        \n    }\n};\nint main(){\n    TreeNode*root=new TreeNode(6,new TreeNode(2,new TreeNode(0),new TreeNode(4)),new TreeNode(8,new TreeNode(7),new TreeNode(9)));\n    cout<<Solution().lowestCommonAncestor(root,root->left,root->right)->val<<endl;\n}"
+    }
+  },
+  {
+    "id": 1031, "slug": "binary-tree-right-side-view", "title": "Binary Tree Right Side View", "neetcode_number": 49,
+    "difficulty": "medium", "category": "trees",
+    "description": "Given the root of a binary tree, imagine yourself standing on the right side of it, return the values of the nodes you can see ordered from top to bottom.",
+    "examples": [
+      {"input": "root = [1,2,3,null,5,null,4]", "output": "[1,3,4]"},
+      {"input": "root = [1,null,3]", "output": "[1,3]"},
+      {"input": "root = []", "output": "[]"}
+    ],
+    "constraints": ["The number of nodes in the tree is in the range [0, 100].", "-100 <= Node.val <= 100"],
+    "follow_up_hints": ["How does BFS level-by-level help here?", "Why take the last element of each level?"],
+    "starter_code": {
+      "python": "from typing import Optional, List\nfrom collections import deque\n\nclass TreeNode:\n    def __init__(self, val=0, left=None, right=None):\n        self.val = val; self.left = left; self.right = right\n\nclass Solution:\n    def rightSideView(self, root: Optional[TreeNode]) -> List[int]:\n        pass\n\nroot=TreeNode(1,TreeNode(2,None,TreeNode(5)),TreeNode(3,None,TreeNode(4)))\nprint(Solution().rightSideView(root))  # [1,3,4]",
+      "javascript": "class TreeNode{constructor(val=0,left=null,right=null){this.val=val;this.left=left;this.right=right;}}\nvar rightSideView=function(root){\n    \n};\nconst root=new TreeNode(1,new TreeNode(2,null,new TreeNode(5)),new TreeNode(3,null,new TreeNode(4)));\nconsole.log(rightSideView(root)); // [1,3,4]",
+      "java": "import java.util.*;\nclass TreeNode{int val;TreeNode left,right;TreeNode(int v){val=v;}TreeNode(int v,TreeNode l,TreeNode r){val=v;left=l;right=r;}}\nclass Solution{\n    public List<Integer> rightSideView(TreeNode root){\n        \n    }\n    public static void main(String[] args){\n        TreeNode root=new TreeNode(1,new TreeNode(2,null,new TreeNode(5)),new TreeNode(3,null,new TreeNode(4)));\n        System.out.println(new Solution().rightSideView(root));\n    }\n}",
+      "cpp": "#include <vector>\n#include <queue>\n#include <iostream>\nusing namespace std;\nstruct TreeNode{int val;TreeNode*left,*right;TreeNode(int v):val(v),left(nullptr),right(nullptr){}TreeNode(int v,TreeNode*l,TreeNode*r):val(v),left(l),right(r){}};\nclass Solution{\npublic:\n    vector<int> rightSideView(TreeNode* root){\n        \n    }\n};\nint main(){\n    TreeNode*root=new TreeNode(1,new TreeNode(2,nullptr,new TreeNode(5)),new TreeNode(3,nullptr,new TreeNode(4)));\n    auto res=Solution().rightSideView(root);\n    for(int v:res)cout<<v<<\" \";cout<<endl;\n}"
+    }
+  },
+  {
+    "id": 1032, "slug": "climbing-stairs", "title": "Climbing Stairs", "neetcode_number": 70,
+    "difficulty": "easy", "category": "1d-dp",
+    "description": "You are climbing a staircase. It takes n steps to reach the top. Each time you can either climb 1 or 2 steps. In how many distinct ways can you climb to the top?",
+    "examples": [
+      {"input": "n = 2", "output": "2", "explanation": "There are two ways to climb to the top: 1+1, 2"},
+      {"input": "n = 3", "output": "3", "explanation": "There are three ways: 1+1+1, 1+2, 2+1"}
+    ],
+    "constraints": ["1 <= n <= 45"],
+    "follow_up_hints": ["What is the relationship between f(n), f(n-1), and f(n-2)?", "Can you solve this in O(1) space?"],
+    "starter_code": {
+      "python": "class Solution:\n    def climbStairs(self, n: int) -> int:\n        pass\n\ns = Solution()\nprint(s.climbStairs(2))  # 2\nprint(s.climbStairs(3))  # 3\nprint(s.climbStairs(5))  # 8",
+      "javascript": "var climbStairs=function(n){\n    \n};\nconsole.log(climbStairs(2)); // 2\nconsole.log(climbStairs(3)); // 3\nconsole.log(climbStairs(5)); // 8",
+      "java": "class Solution{\n    public int climbStairs(int n){\n        \n    }\n    public static void main(String[] args){\n        System.out.println(new Solution().climbStairs(5)); // 8\n    }\n}",
+      "cpp": "#include <iostream>\nusing namespace std;\nclass Solution{\npublic:\n    int climbStairs(int n){\n        \n    }\n};\nint main(){\n    cout<<Solution().climbStairs(5)<<endl; // 8\n}"
+    }
+  },
+  {
+    "id": 1033, "slug": "house-robber", "title": "House Robber", "neetcode_number": 72,
+    "difficulty": "medium", "category": "1d-dp",
+    "description": "You are a professional robber planning to rob houses along a street. Each house has a certain amount of money stashed, the only constraint stopping you from robbing each of them is that adjacent houses have security systems connected and it will automatically contact the police if two adjacent houses were broken into on the same night. Given an integer array nums representing the amount of money of each house, return the maximum amount of money you can rob tonight without alerting the police.",
+    "examples": [
+      {"input": "nums = [1,2,3,1]", "output": "4", "explanation": "Rob house 1 (money=1) then rob house 3 (money=3). Total = 1+3 = 4."},
+      {"input": "nums = [2,7,9,3,1]", "output": "12"}
+    ],
+    "constraints": ["1 <= nums.length <= 100", "0 <= nums[i] <= 400"],
+    "follow_up_hints": ["What are the two choices at each house?", "Can you reduce the space from O(n) to O(1)?"],
+    "starter_code": {
+      "python": "from typing import List\n\nclass Solution:\n    def rob(self, nums: List[int]) -> int:\n        pass\n\ns = Solution()\nprint(s.rob([1,2,3,1]))    # 4\nprint(s.rob([2,7,9,3,1]))  # 12",
+      "javascript": "var rob=function(nums){\n    \n};\nconsole.log(rob([1,2,3,1]));   // 4\nconsole.log(rob([2,7,9,3,1])); // 12",
+      "java": "class Solution{\n    public int rob(int[] nums){\n        \n    }\n    public static void main(String[] args){\n        System.out.println(new Solution().rob(new int[]{2,7,9,3,1})); // 12\n    }\n}",
+      "cpp": "#include <vector>\n#include <iostream>\nusing namespace std;\nclass Solution{\npublic:\n    int rob(vector<int>& nums){\n        \n    }\n};\nint main(){\n    vector<int> nums={2,7,9,3,1};\n    cout<<Solution().rob(nums)<<endl;\n}"
+    }
+  },
+  {
+    "id": 1034, "slug": "coin-change", "title": "Coin Change", "neetcode_number": 77,
+    "difficulty": "medium", "category": "1d-dp",
+    "description": "You are given an integer array coins representing coins of different denominations and an integer amount representing a total amount of money. Return the fewest number of coins that you need to make up that amount. If that amount of money cannot be made up by any combination of the coins, return -1. You may assume that you have an infinite number of each kind of coin.",
+    "examples": [
+      {"input": "coins = [1,5,10,25], amount = 36", "output": "3", "explanation": "25 + 10 + 1 = 36"},
+      {"input": "coins = [1,2,5], amount = 11", "output": "3", "explanation": "5 + 5 + 1 = 11"},
+      {"input": "coins = [2], amount = 3", "output": "-1"}
+    ],
+    "constraints": ["1 <= coins.length <= 12", "1 <= coins[i] <= 2^31 - 1", "0 <= amount <= 10^4"],
+    "follow_up_hints": ["What is the recurrence relation? How does dp[i] relate to dp[i - coin]?", "What is the time complexity? How does it scale with amount and number of coins?"],
+    "starter_code": {
+      "python": "from typing import List\n\nclass Solution:\n    def coinChange(self, coins: List[int], amount: int) -> int:\n        pass\n\ns = Solution()\nprint(s.coinChange([1,2,5], 11))   # 3\nprint(s.coinChange([2], 3))        # -1\nprint(s.coinChange([1,5,10,25], 36)) # 3",
+      "javascript": "var coinChange=function(coins,amount){\n    \n};\nconsole.log(coinChange([1,2,5], 11));  // 3\nconsole.log(coinChange([2], 3));       // -1",
+      "java": "class Solution{\n    public int coinChange(int[] coins,int amount){\n        \n    }\n    public static void main(String[] args){\n        System.out.println(new Solution().coinChange(new int[]{1,2,5},11)); // 3\n    }\n}",
+      "cpp": "#include <vector>\n#include <iostream>\nusing namespace std;\nclass Solution{\npublic:\n    int coinChange(vector<int>& coins,int amount){\n        \n    }\n};\nint main(){\n    vector<int> coins={1,2,5};\n    cout<<Solution().coinChange(coins,11)<<endl;\n}"
+    }
+  },
+  {
+    "id": 1035, "slug": "maximum-subarray", "title": "Maximum Subarray", "neetcode_number": 73,
+    "difficulty": "medium", "category": "1d-dp",
+    "description": "Given an integer array nums, find the subarray with the largest sum, and return its sum.",
+    "examples": [
+      {"input": "nums = [-2,1,-3,4,-1,2,1,-5,4]", "output": "6", "explanation": "The subarray [4,-1,2,1] has the largest sum 6."},
+      {"input": "nums = [1]", "output": "1"},
+      {"input": "nums = [5,4,-1,7,8]", "output": "23"}
+    ],
+    "constraints": ["1 <= nums.length <= 10^5", "-10^4 <= nums[i] <= 10^4"],
+    "follow_up_hints": ["This is Kadane's algorithm. What is the key insight about when to restart the subarray?", "What is the time and space complexity?"],
+    "starter_code": {
+      "python": "from typing import List\n\nclass Solution:\n    def maxSubArray(self, nums: List[int]) -> int:\n        pass\n\ns = Solution()\nprint(s.maxSubArray([-2,1,-3,4,-1,2,1,-5,4]))  # 6\nprint(s.maxSubArray([5,4,-1,7,8]))              # 23",
+      "javascript": "var maxSubArray=function(nums){\n    \n};\nconsole.log(maxSubArray([-2,1,-3,4,-1,2,1,-5,4])); // 6\nconsole.log(maxSubArray([5,4,-1,7,8]));             // 23",
+      "java": "class Solution{\n    public int maxSubArray(int[] nums){\n        \n    }\n    public static void main(String[] args){\n        System.out.println(new Solution().maxSubArray(new int[]{-2,1,-3,4,-1,2,1,-5,4}));\n    }\n}",
+      "cpp": "#include <vector>\n#include <iostream>\nusing namespace std;\nclass Solution{\npublic:\n    int maxSubArray(vector<int>& nums){\n        \n    }\n};\nint main(){\n    vector<int> nums={-2,1,-3,4,-1,2,1,-5,4};\n    cout<<Solution().maxSubArray(nums)<<endl;\n}"
+    }
+  }
+]

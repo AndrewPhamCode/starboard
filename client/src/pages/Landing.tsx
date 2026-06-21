@@ -1,3 +1,4 @@
+import { useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
 
 function scrollToTypes() {
@@ -107,11 +108,68 @@ const COURSES = [
   },
 ]
 
-const STAR_DEMO = [
-  { label: 'Situation', letter: 'S', score: 4, color: 'bg-rose-400', track: 'bg-rose-100' },
-  { label: 'Task', letter: 'T', score: 3, color: 'bg-amber-400', track: 'bg-amber-100' },
-  { label: 'Action', letter: 'A', score: 5, color: 'bg-violet-500', track: 'bg-violet-100' },
-  { label: 'Result', letter: 'R', score: 4, color: 'bg-emerald-500', track: 'bg-emerald-100' },
+interface DemoSlide {
+  mode: string
+  question: string
+  overall: number
+  bars: { label: string; letter: string; score: number; color: string; track: string }[]
+  note: string
+  accent: string
+  accentBorder: string
+  accentShadow: string
+  accentText: string
+  soon?: boolean
+}
+
+const DEMO_SLIDES: DemoSlide[] = [
+  {
+    mode: 'Behavioral',
+    question: 'Tell me about a time you led a team through a difficult project.',
+    overall: 4,
+    bars: [
+      { label: 'Situation', letter: 'S', score: 4, color: 'bg-rose-400',    track: 'bg-rose-100' },
+      { label: 'Task',      letter: 'T', score: 3, color: 'bg-amber-400',   track: 'bg-amber-100' },
+      { label: 'Action',    letter: 'A', score: 5, color: 'bg-violet-500',  track: 'bg-violet-100' },
+      { label: 'Result',    letter: 'R', score: 4, color: 'bg-emerald-500', track: 'bg-emerald-100' },
+    ],
+    note: 'Strong action section. Quantify your result more specifically — mention the actual metric or timeline to make it land.',
+    accent: 'bg-rose-500', accentBorder: 'border-rose-700', accentShadow: '#9f1239', accentText: 'text-rose-700',
+  },
+  {
+    mode: 'Technical',
+    question: 'How would you design a URL shortener that handles 100M requests per day?',
+    overall: 3,
+    bars: [
+      { label: 'Situation', letter: 'S', score: 2, color: 'bg-rose-400',    track: 'bg-rose-100' },
+      { label: 'Task',      letter: 'T', score: 3, color: 'bg-amber-400',   track: 'bg-amber-100' },
+      { label: 'Action',    letter: 'A', score: 4, color: 'bg-violet-500',  track: 'bg-violet-100' },
+      { label: 'Result',    letter: 'R', score: 3, color: 'bg-emerald-500', track: 'bg-emerald-100' },
+    ],
+    note: "Good coverage of hashing and load balancing. Add discussion of cache eviction strategy and how you'd handle hotspot keys at scale.",
+    accent: 'bg-violet-500', accentBorder: 'border-violet-700', accentShadow: '#4c1d95', accentText: 'text-violet-700',
+  },
+  {
+    mode: 'Resume Screening',
+    question: 'Walk me through your most impactful project from your resume.',
+    overall: 4,
+    bars: [
+      { label: 'Situation', letter: 'S', score: 5, color: 'bg-rose-400',    track: 'bg-rose-100' },
+      { label: 'Task',      letter: 'T', score: 4, color: 'bg-amber-400',   track: 'bg-amber-100' },
+      { label: 'Action',    letter: 'A', score: 4, color: 'bg-violet-500',  track: 'bg-violet-100' },
+      { label: 'Result',    letter: 'R', score: 3, color: 'bg-emerald-500', track: 'bg-emerald-100' },
+    ],
+    note: 'Great context-setting. Your result section needs harder numbers — replace "improved performance" with the actual percentage or user impact.',
+    accent: 'bg-emerald-500', accentBorder: 'border-emerald-700', accentShadow: '#064e3b', accentText: 'text-emerald-700',
+  },
+  {
+    mode: 'LeetCode',
+    question: 'Two Sum — explain your approach out loud as you code.',
+    overall: 0,
+    bars: [],
+    note: '',
+    accent: 'bg-amber-400', accentBorder: 'border-amber-600', accentShadow: '#92400e', accentText: 'text-amber-700',
+    soon: true,
+  },
 ]
 
 const TESTIMONIALS = [
@@ -158,6 +216,22 @@ const STATS = [
 
 /* ─── Page ───────────────────────────────────────────────────────────────── */
 export default function Landing() {
+  const [demoIdx, setDemoIdx] = useState(0)
+  const touchStartX = useRef<number | null>(null)
+
+  function prevDemo() { setDemoIdx((i) => (i - 1 + DEMO_SLIDES.length) % DEMO_SLIDES.length) }
+  function nextDemo() { setDemoIdx((i) => (i + 1) % DEMO_SLIDES.length) }
+
+  function onTouchStart(e: React.TouchEvent) { touchStartX.current = e.touches[0].clientX }
+  function onTouchEnd(e: React.TouchEvent) {
+    if (touchStartX.current === null) return
+    const dx = e.changedTouches[0].clientX - touchStartX.current
+    if (Math.abs(dx) > 40) { dx < 0 ? nextDemo() : prevDemo() }
+    touchStartX.current = null
+  }
+
+  const slide = DEMO_SLIDES[demoIdx]
+
   return (
     <div className="min-h-screen bg-[#FEFCE8] overflow-x-hidden" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
 
@@ -322,49 +396,123 @@ export default function Landing() {
               </ul>
             </div>
 
-            {/* Demo card */}
-            <Clay bg="bg-white" border="border-gray-300" shadow="#d1d5db" className="p-7">
-              {/* Header */}
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-0.5">AI Feedback</p>
-                  <p className="font-extrabold text-gray-900 text-lg" style={{ fontFamily: "'Baloo 2', cursive" }}>STAR Score</p>
+            {/* Demo carousel */}
+            <div
+              className="select-none"
+              onTouchStart={onTouchStart}
+              onTouchEnd={onTouchEnd}
+            >
+              <Clay bg="bg-white" border="border-gray-300" shadow="#d1d5db" className="p-7">
+                {/* Mode tabs */}
+                <div className="flex gap-2 flex-wrap mb-5">
+                  {DEMO_SLIDES.map((s, i) => (
+                    <button
+                      key={s.mode}
+                      onClick={() => setDemoIdx(i)}
+                      className={`px-3 py-1 rounded-full text-xs font-bold border-2 transition-all duration-150 cursor-pointer ${
+                        i === demoIdx
+                          ? `${s.accent} ${s.accentBorder} text-white`
+                          : 'bg-gray-100 border-gray-200 text-gray-500 hover:bg-gray-200'
+                      }`}
+                    >
+                      {s.mode}
+                    </button>
+                  ))}
                 </div>
-                <Clay bg="bg-violet-500" border="border-violet-700" shadow="#5b21b6" className="w-14 h-14 flex flex-col items-center justify-center">
-                  <span className="text-white font-extrabold text-2xl leading-none" style={{ fontFamily: "'Baloo 2', cursive" }}>4</span>
-                  <span className="text-violet-200 text-xs font-semibold">/ 5</span>
+
+                {/* Question chip */}
+                <Clay bg="bg-gray-50" border="border-gray-200" shadow="#e5e7eb" className="px-3 py-2 mb-5">
+                  <p className="text-xs text-gray-500 italic leading-snug">"{slide.question}"</p>
                 </Clay>
-              </div>
 
-              {/* Bars */}
-              <div className="space-y-4 mb-6">
-                {STAR_DEMO.map(({ label, letter, score, color, track }) => (
-                  <div key={label} className="flex items-center gap-3">
-                    <Clay bg={color} border="border-transparent" shadow="rgba(0,0,0,0.15)"
-                      className="w-7 h-7 flex items-center justify-center shrink-0"
-                      style={{ boxShadow: '2px 2px 0px rgba(0,0,0,0.2)' }}>
-                      <span className="text-white text-xs font-extrabold">{letter}</span>
+                {slide.soon ? (
+                  /* Coming soon state */
+                  <div className="flex flex-col items-center justify-center py-10 gap-4">
+                    <Clay bg="bg-amber-100" border="border-amber-400" shadow="#fbbf24" className="px-5 py-2">
+                      <span className="text-amber-700 font-extrabold text-sm" style={{ fontFamily: "'Baloo 2', cursive" }}>Coming Soon</span>
                     </Clay>
-                    <span className="w-16 shrink-0 text-sm font-semibold text-gray-700">{label}</span>
-                    <div className={`flex-1 h-4 rounded-full ${track} border-2 border-gray-200 overflow-hidden`}>
-                      <div
-                        className={`h-full rounded-full ${color} border-r-2 border-white`}
-                        style={{ width: `${(score / 5) * 100}%` }}
-                      />
-                    </div>
-                    <span className="text-sm font-extrabold text-gray-700 w-6 text-right">{score}</span>
+                    <p className="text-gray-400 text-sm text-center max-w-[200px]">LeetCode verbal coaching is in the works. Stay tuned!</p>
                   </div>
-                ))}
-              </div>
+                ) : (
+                  <>
+                    {/* Header row */}
+                    <div className="flex items-center justify-between mb-5">
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-0.5">AI Feedback</p>
+                        <p className="font-extrabold text-gray-900 text-lg" style={{ fontFamily: "'Baloo 2', cursive" }}>STAR Score</p>
+                      </div>
+                      <Clay bg={slide.accent} border={slide.accentBorder} shadow={slide.accentShadow} className="w-14 h-14 flex flex-col items-center justify-center">
+                        <span className="text-white font-extrabold text-2xl leading-none" style={{ fontFamily: "'Baloo 2', cursive" }}>{slide.overall}</span>
+                        <span className="text-white/70 text-xs font-semibold">/ 5</span>
+                      </Clay>
+                    </div>
 
-              {/* Coaching note */}
-              <Clay bg="bg-yellow-50" border="border-yellow-300" shadow="#fbbf24" className="p-4">
-                <p className="text-xs font-bold uppercase tracking-wide text-yellow-700 mb-1.5">Coaching note</p>
-                <p className="text-gray-700 text-sm leading-relaxed">
-                  Strong action section. Quantify your result more specifically — mention the actual metric or timeline to make it land.
-                </p>
+                    {/* Bars */}
+                    <div className="space-y-4 mb-5">
+                      {slide.bars.map(({ label, letter, score, color, track }) => (
+                        <div key={label} className="flex items-center gap-3">
+                          <Clay bg={color} border="border-transparent" shadow="rgba(0,0,0,0.15)"
+                            className="w-7 h-7 flex items-center justify-center shrink-0"
+                            style={{ boxShadow: '2px 2px 0px rgba(0,0,0,0.2)' }}>
+                            <span className="text-white text-xs font-extrabold">{letter}</span>
+                          </Clay>
+                          <span className="w-16 shrink-0 text-sm font-semibold text-gray-700">{label}</span>
+                          <div className={`flex-1 h-4 rounded-full ${track} border-2 border-gray-200 overflow-hidden`}>
+                            <div
+                              className={`h-full rounded-full ${color} border-r-2 border-white transition-all duration-500`}
+                              style={{ width: `${(score / 5) * 100}%` }}
+                            />
+                          </div>
+                          <span className="text-sm font-extrabold text-gray-700 w-6 text-right">{score}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Coaching note */}
+                    <Clay bg="bg-yellow-50" border="border-yellow-300" shadow="#fbbf24" className="p-4">
+                      <p className="text-xs font-bold uppercase tracking-wide text-yellow-700 mb-1.5">Coaching note</p>
+                      <p className="text-gray-700 text-sm leading-relaxed">{slide.note}</p>
+                    </Clay>
+                  </>
+                )}
+
+                {/* Prev / Next + dots */}
+                <div className="flex items-center justify-between mt-5">
+                  <button
+                    onClick={prevDemo}
+                    className="w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors duration-150"
+                    aria-label="Previous mode"
+                  >
+                    <svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                    </svg>
+                  </button>
+                  <div className="flex gap-2">
+                    {DEMO_SLIDES.map((s, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setDemoIdx(i)}
+                        className={`rounded-full border-2 transition-all duration-150 cursor-pointer ${
+                          i === demoIdx
+                            ? `w-5 h-3 ${s.accent} ${s.accentBorder}`
+                            : 'w-3 h-3 bg-gray-200 border-gray-300'
+                        }`}
+                        aria-label={`Go to ${s.mode}`}
+                      />
+                    ))}
+                  </div>
+                  <button
+                    onClick={nextDemo}
+                    className="w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors duration-150"
+                    aria-label="Next mode"
+                  >
+                    <svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                    </svg>
+                  </button>
+                </div>
               </Clay>
-            </Clay>
+            </div>
           </div>
         </div>
       </section>
