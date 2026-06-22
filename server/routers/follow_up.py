@@ -13,6 +13,7 @@ class FollowUpRequest(BaseModel):
 
 
 class FollowUpResponse(BaseModel):
+    reaction: str
     follow_up: str
 
 
@@ -27,17 +28,29 @@ async def generate_follow_up(body: FollowUpRequest):
 
     message = client.messages.create(
         model="claude-haiku-4-5-20251001",
-        max_tokens=60,
+        max_tokens=120,
         system=(
-            "You are a senior technical interviewer. Given the original question and the candidate's answer, "
-            "write ONE sharp follow-up question (max 20 words) that targets the weakest or vaguest part of their answer. "
-            "Sound like a real person — not a chatbot. No praise. No preamble. Return only the question."
+            "You are a senior engineer conducting a technical interview. "
+            "Given the question and the candidate's answer, respond with two parts:\n"
+            "1. REACTION: One sentence (max 15 words) acknowledging what they said. "
+            "Tone: professional and measured — not praise, not criticism. "
+            "Examples: 'Got it, that gives me some context.' / 'Okay, I want to dig into that.' / 'Alright, so you took the lead on that.'\n"
+            "2. FOLLOW_UP: One sharp question (max 20 words) targeting the weakest or vaguest part of their answer.\n"
+            "Return exactly two lines:\nREACTION: <text>\nFOLLOW_UP: <text>"
         ),
         messages=[{
             "role": "user",
-            "content": f"Original question: {body.question}\n\nCandidate's answer: {body.transcript}"
+            "content": f"Question: {body.question}\n\nAnswer: {body.transcript}"
         }],
     )
 
-    follow_up = message.content[0].text.strip().strip('"').strip("'")
-    return {"follow_up": follow_up}
+    text = message.content[0].text.strip()
+    lines = {
+        parts[0].strip().upper(): parts[1].strip()
+        for l in text.splitlines()
+        if ":" in l
+        for parts in [l.split(":", 1)]
+    }
+    reaction = lines.get("REACTION", "Okay, got it.")
+    follow_up = lines.get("FOLLOW_UP", "Can you elaborate on that?").strip('"\'')
+    return {"reaction": reaction, "follow_up": follow_up}

@@ -132,6 +132,66 @@ async function speak(text: string, onEnd: () => void) {
   }
 }
 
+/* ─── Silence detector hook ─────────────────────────────────────────────── */
+function useSilenceDetector(
+  enabled: boolean,
+  getStream: () => MediaStream | null,
+  onSilence: () => void,
+  minMs = 5000,
+  silenceMs = 2000,
+): number | null {
+  const [countdown, setCountdown] = useState<number | null>(null)
+  const stateRef = useRef({ silentSince: 0, startedAt: 0, fired: false })
+
+  useEffect(() => {
+    if (!enabled) {
+      setCountdown(null)
+      stateRef.current = { silentSince: 0, startedAt: 0, fired: false }
+      return
+    }
+    const stream = getStream()
+    if (!stream) return
+
+    const ctx = new AudioContext()
+    const analyser = ctx.createAnalyser()
+    analyser.fftSize = 512
+    ctx.createMediaStreamSource(stream).connect(analyser)
+    const data = new Uint8Array(analyser.frequencyBinCount)
+    stateRef.current = { silentSince: 0, startedAt: Date.now(), fired: false }
+
+    const tick = setInterval(() => {
+      const s = stateRef.current
+      if (s.fired) return
+      if (Date.now() - s.startedAt < minMs) return
+
+      analyser.getByteFrequencyData(data)
+      const avg = data.reduce((a, b) => a + b, 0) / data.length
+
+      if (avg < 8) {
+        if (!s.silentSince) s.silentSince = Date.now()
+        const silentFor = Date.now() - s.silentSince
+        const remaining = Math.ceil((silenceMs - silentFor) / 1000)
+        setCountdown(remaining > 0 ? remaining : 0)
+        if (silentFor >= silenceMs) {
+          s.fired = true
+          onSilence()
+        }
+      } else {
+        s.silentSince = 0
+        setCountdown(null)
+      }
+    }, 100)
+
+    return () => {
+      clearInterval(tick)
+      ctx.close()
+      setCountdown(null)
+    }
+  }, [enabled]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  return countdown
+}
+
 /* ─── Mic recording hook ─────────────────────────────────────────────────── */
 function useRecorder() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
@@ -183,7 +243,9 @@ function useRecorder() {
     cachedStreamRef.current = null
   }
 
-  return { acquireMic, startRecording, stopRecording, releaseMic }
+  function getStream() { return cachedStreamRef.current }
+
+  return { acquireMic, startRecording, stopRecording, releaseMic, getStream }
 }
 
 /* ─── Live caption hook (SpeechRecognition, Chrome/Edge only) ───────────── */
@@ -273,34 +335,88 @@ function useLiveCaption(active: boolean) {
   return caption
 }
 
-/* ─── Interviewer avatar ─────────────────────────────────────────────────── */
-function InterviewerCard({ speaking, subtitle }: { speaking: boolean; subtitle?: string }) {
+/* ─── Waveform bars (speaking animation) ────────────────────────────────── */
+function WaveformBars() {
+  const bars = [
+    { x: 1,  hVals: '6;22;10;18;6',  yVals: '11;3;9;5;11',  delay: '0s' },
+    { x: 13, hVals: '14;8;24;6;14',  yVals: '7;10;2;11;7',  delay: '0.12s' },
+    { x: 25, hVals: '20;12;6;20;20', yVals: '4;8;11;4;4',   delay: '0.04s' },
+    { x: 37, hVals: '8;18;22;8;8',   yVals: '10;5;3;10;10', delay: '0.2s' },
+    { x: 49, hVals: '18;6;14;22;18', yVals: '5;11;7;3;5',   delay: '0.08s' },
+  ]
+  const spline = '0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1'
   return (
-    <div className="flex flex-col items-center gap-4">
-      <div className={`relative w-40 h-40 rounded-3xl border-[3px] bg-violet-900 flex items-center justify-center transition-all duration-300 ${
-        speaking ? 'border-violet-400' : 'border-violet-700'
-      }`} style={{ boxShadow: speaking ? '0 0 0 4px rgba(167,139,250,0.3), 5px 5px 0px #4c1d95' : '5px 5px 0px #4c1d95' }}>
-        {speaking && (
-          <span className="absolute inset-0 rounded-3xl border-[3px] border-violet-400 animate-ping opacity-40" />
-        )}
-        <div className="flex flex-col items-center gap-2">
-          <div className="w-16 h-16 rounded-2xl bg-violet-700 border-2 border-violet-500 flex items-center justify-center"
-            style={{ boxShadow: '2px 2px 0px #4c1d95' }}>
-            <span className="text-white font-extrabold text-2xl" style={{ fontFamily: "'Baloo 2', cursive" }}>AI</span>
-          </div>
-          <div className="text-center">
-            <p className="text-white font-bold text-sm" style={{ fontFamily: "'Baloo 2', cursive" }}>Alex</p>
-            <p className="text-violet-400 text-xs">Senior Engineer</p>
-          </div>
-        </div>
-      </div>
+    <svg width="60" height="28" viewBox="0 0 60 28" style={{ display: 'block' }}>
+      {bars.map((b, i) => (
+        <rect key={i} x={b.x} width={10} rx={5} fill="#22c55e" fillOpacity={0.9}>
+          <animate attributeName="height" values={b.hVals} dur="0.85s" repeatCount="indefinite" begin={b.delay} calcMode="spline" keySplines={spline}/>
+          <animate attributeName="y" values={b.yVals} dur="0.85s" repeatCount="indefinite" begin={b.delay} calcMode="spline" keySplines={spline}/>
+        </rect>
+      ))}
+    </svg>
+  )
+}
 
-      {subtitle && (
-        <div className="max-w-xs bg-gray-800 border border-gray-600 rounded-2xl px-4 py-3 text-center">
-          <p className="text-gray-200 text-sm leading-relaxed italic">"{subtitle}"</p>
-        </div>
-      )}
+/* ─── Thinking dots (processing state) ──────────────────────────────────── */
+function ThinkingDots() {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+      {[0, 0.18, 0.36].map((delay, i) => (
+        <div key={i} className="animate-bounce" style={{ width: 8, height: 8, borderRadius: '50%', background: '#4b5563', animationDelay: `${delay}s` }}/>
+      ))}
     </div>
+  )
+}
+
+/* ─── Professional avatar illustration ──────────────────────────────────── */
+function AvatarIllustration() {
+  return (
+    <svg viewBox="0 0 200 200" width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+      <rect width="200" height="200" fill="#1a2540"/>
+      {/* Shoulders / suit */}
+      <path d="M 10 200 Q 10 158 100 148 Q 190 158 190 200 Z" fill="#1e3a5f"/>
+      <path d="M 100 148 L 80 180 L 100 170 L 120 180 Z" fill="#0f2540"/>
+      <path d="M 100 148 L 93 163 L 100 160 L 107 163 Z" fill="#e2e8f0"/>
+      {/* Tie */}
+      <path d="M 97 160 L 95 180 L 100 184 L 105 180 L 103 160 L 100 165 Z" fill="#7c3aed"/>
+      {/* Neck */}
+      <path d="M 88 132 Q 88 148 100 148 Q 112 148 112 132 Z" fill="#c4956a"/>
+      {/* Head */}
+      <ellipse cx="100" cy="98" rx="46" ry="50" fill="#c4956a"/>
+      {/* Hair */}
+      <path d="M 54 88 Q 56 50 100 46 Q 144 50 146 88 Q 138 66 100 63 Q 62 66 54 88 Z" fill="#1a1008"/>
+      <path d="M 54 88 Q 49 98 53 112 Q 57 98 60 90 Z" fill="#1a1008"/>
+      <path d="M 146 88 Q 151 98 147 112 Q 143 98 140 90 Z" fill="#1a1008"/>
+      {/* Ears */}
+      <ellipse cx="54" cy="102" rx="7" ry="9" fill="#b8845a"/>
+      <ellipse cx="146" cy="102" rx="7" ry="9" fill="#b8845a"/>
+      <ellipse cx="54" cy="102" rx="4" ry="6" fill="#c4956a"/>
+      <ellipse cx="146" cy="102" rx="4" ry="6" fill="#c4956a"/>
+      {/* Eye whites */}
+      <ellipse cx="81" cy="95" rx="11" ry="12" fill="white"/>
+      <ellipse cx="119" cy="95" rx="11" ry="12" fill="white"/>
+      {/* Irises */}
+      <circle cx="82" cy="96" r="7" fill="#2c4a8c"/>
+      <circle cx="120" cy="96" r="7" fill="#2c4a8c"/>
+      {/* Pupils */}
+      <circle cx="82" cy="97" r="4" fill="#0d0d0d"/>
+      <circle cx="120" cy="97" r="4" fill="#0d0d0d"/>
+      {/* Eye shine */}
+      <circle cx="84" cy="94" r="1.5" fill="white" fillOpacity="0.85"/>
+      <circle cx="122" cy="94" r="1.5" fill="white" fillOpacity="0.85"/>
+      {/* Eyebrows */}
+      <path d="M 69 81 Q 81 76 93 80" stroke="#1a1008" strokeWidth="3" fill="none" strokeLinecap="round"/>
+      <path d="M 107 80 Q 119 76 131 81" stroke="#1a1008" strokeWidth="3" fill="none" strokeLinecap="round"/>
+      {/* Nose */}
+      <path d="M 100 103 Q 95 115 97 120 Q 100 122 103 120 Q 105 115 100 103" fill="#b8845a" fillOpacity="0.5"/>
+      <circle cx="95" cy="119" r="4" fill="#b8845a"/>
+      <circle cx="105" cy="119" r="4" fill="#b8845a"/>
+      {/* Mouth */}
+      <path d="M 86 133 Q 100 140 114 133" stroke="#8b5e3c" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+      {/* Cheek shadows */}
+      <ellipse cx="68" cy="115" rx="12" ry="8" fill="#b8845a" fillOpacity="0.2"/>
+      <ellipse cx="132" cy="115" rx="12" ry="8" fill="#b8845a" fillOpacity="0.2"/>
+    </svg>
   )
 }
 
@@ -312,8 +428,8 @@ function UserCamera({ isSpeaking }: { isSpeaking: boolean }) {
   const [available, setAvailable] = useState(true)
 
   // Position and size — initialized to bottom-right
-  const [pos, setPos] = useState(() => ({ x: window.innerWidth - 196, y: 80 }))
-  const [size, setSize] = useState({ w: 172, h: 129 })
+  const [pos, setPos] = useState(() => ({ x: window.innerWidth - 180, y: window.innerHeight - 72 - 140 }))
+  const [size, setSize] = useState({ w: 160, h: 120 })
 
   // Refs so event handlers always see latest values without re-registering
   const posRef = useRef(pos)
@@ -514,7 +630,7 @@ export default function InterviewSession() {
   const [score, setScore] = useState<ScoreResult | null>(null)
   const [error, setError] = useState('')
 
-  const { acquireMic, startRecording, stopRecording, releaseMic } = useRecorder()
+  const { acquireMic, startRecording, stopRecording, releaseMic, getStream } = useRecorder()
   const isRecording = sessionState === 'recording_1' || sessionState === 'recording_2'
   const timer = useTimer(isRecording)
   const caption = useLiveCaption(isRecording)
@@ -527,6 +643,13 @@ export default function InterviewSession() {
   if (!question) return null
 
   const q = question
+
+  function autoStop() {
+    if (sessionState === 'recording_1') stopAnswer1()
+    else if (sessionState === 'recording_2') stopAnswer2()
+  }
+
+  const silenceCountdown = useSilenceDetector(isRecording, getStream, autoStop)
 
   /* ── Step 1: acquire mic in the click handler (user gesture), then start TTS ── */
   async function beginInterview() {
@@ -573,11 +696,11 @@ export default function InterviewSession() {
         body: JSON.stringify({ question: q.text, transcript }),
       })
       if (!fuRes.ok) throw new Error(await apiError(fuRes))
-      const { follow_up } = await fuRes.json()
+      const { follow_up, reaction } = await fuRes.json()
       setFollowUpQuestion(follow_up)
 
       setSessionState('followup_speaking')
-      speak(follow_up, () => {
+      speak(`${reaction} ${follow_up}`, () => {
         try {
           startRecording() // Stream is still cached from step 1
           setSessionState('recording_2')
@@ -706,168 +829,209 @@ export default function InterviewSession() {
     )
   }
 
-  /* ─── Interview room view ──────────────────────────────────────────────── */
-  return (
-    <div className="min-h-screen bg-gray-950 flex flex-col" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
+  /* ─── Interview room view (Zoom-style) ────────────────────────────────── */
+  const isProcessingState = sessionState === 'processing_1' || sessionState === 'processing_2' || sessionState === 'scoring'
 
-      {/* Top bar */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800">
+  return (
+    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: '#111318', overflow: 'hidden', fontFamily: "'Inter', system-ui, sans-serif" }}>
+
+      {/* ── Top bar ── */}
+      <div style={{ height: 52, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px', background: '#16181f', borderBottom: '1px solid #232630', zIndex: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <svg width="20" height="20" viewBox="0 0 28 28" fill="none">
-            <line x1="14" y1="3" x2="14" y2="25" stroke="#f0f0f0" strokeWidth="1.2" strokeOpacity="0.35" strokeLinecap="round" />
-            <line x1="3" y1="14" x2="13" y2="14" stroke="#f0f0f0" strokeWidth="1.2" strokeOpacity="0.35" strokeLinecap="round" />
-            <line x1="15" y1="14" x2="22" y2="14" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round" />
-            <path d="M20 11.5L24.5 14L20 16.5" fill="#7c3aed" />
-            <circle cx="14" cy="14" r="2.5" fill="white" />
+          <svg width="20" height="20" viewBox="0 0 32 32" fill="none">
+            <polygon points="7,15 21,9 23,15" fill="#374151"/>
+            <polygon points="7,17 21,23 23,17" fill="#374151"/>
+            <polygon points="5,14.5 29,16 5,17.5" fill="#1f2937"/>
+            <ellipse cx="6" cy="13.5" rx="2" ry="1.4" fill="#dc2626" fillOpacity="0.9"/>
+            <ellipse cx="6" cy="18.5" rx="2" ry="1.4" fill="#dc2626" fillOpacity="0.9"/>
+            <circle cx="22" cy="16" r="1.5" fill="#dc2626"/>
           </svg>
-          <span style={{ fontFamily: "'Space Grotesk', system-ui, sans-serif", fontWeight: 600, fontSize: '0.95rem', color: '#f0f0f0' }}>starboard</span>
+          <span style={{ fontWeight: 600, fontSize: '0.9rem', color: '#f0f0f0', fontFamily: "'Space Grotesk', system-ui, sans-serif" }}>starboard</span>
         </div>
-        <div className="flex items-center gap-3">
-          {isRecording && (
-            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-red-900 border border-red-600">
-              <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-              <span className="text-red-300 text-xs font-bold font-mono">{timer}</span>
-            </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {isRecording ? (
+            <>
+              <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#ef4444', display: 'inline-block' }} className="animate-pulse"/>
+              <span style={{ fontFamily: 'monospace', color: '#f0f0f0', fontSize: '0.95rem', fontWeight: 600, letterSpacing: '0.05em' }}>{timer}</span>
+            </>
+          ) : (
+            <span style={{ color: '#6b7280', fontSize: '0.82rem' }}>{STATE_LABELS[sessionState]}</span>
           )}
-          <span className="text-gray-400 text-sm">{STATE_LABELS[sessionState]}</span>
-          <button
-            onClick={() => { stopAudio(); releaseMic(); navigate(`/practice/${type}`) }}
-            className="text-gray-500 hover:text-gray-300 text-sm cursor-pointer transition-colors"
-          >
-            End interview
-          </button>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          <span style={{ color: '#6b7280', fontSize: '0.8rem' }}>2 participants</span>
         </div>
       </div>
 
-      {/* Main area */}
-      <div className="flex-1 flex flex-col items-center justify-center gap-8 px-6 py-8 relative">
+      {/* ── Main tile ── */}
+      <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', inset: 0, background: '#0a0d14' }}>
+          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 50% 35%, #0e1c36 0%, #080b12 70%)' }}/>
+        </div>
 
-        <UserCamera isSpeaking={isRecording && caption.length > 0} />
+        {/* Avatar + animations */}
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 20, zIndex: 1 }}>
+          <div style={{
+            width: 200, height: 200, borderRadius: '50%', overflow: 'hidden',
+            border: speaking ? '3px solid #22c55e' : '3px solid #2d3748',
+            boxShadow: speaking ? '0 0 0 6px rgba(34,197,94,0.12), 0 0 60px rgba(34,197,94,0.06)' : '0 0 0 1px rgba(255,255,255,0.04)',
+            transition: 'border-color 0.4s, box-shadow 0.4s',
+          }}>
+            <AvatarIllustration />
+          </div>
+          {speaking && <WaveformBars />}
+          {isProcessingState && !error && sessionState !== 'scoring' && <ThinkingDots />}
+        </div>
 
-        {/* Interviewer */}
-        <InterviewerCard speaking={speaking} subtitle={subtitle} />
+        {/* Name plate */}
+        <div style={{ position: 'absolute', bottom: 20, left: 20, zIndex: 3, display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', borderRadius: 8, padding: '6px 14px', border: '1px solid rgba(255,255,255,0.07)' }}>
+          <span style={{ color: '#f0f0f0', fontSize: '0.85rem', fontWeight: 600 }}>Alex</span>
+          <span style={{ color: '#4b5563', fontSize: '0.8rem' }}>·</span>
+          <span style={{ color: '#9ca3af', fontSize: '0.8rem' }}>Senior Engineer</span>
+        </div>
 
-        {/* Question card (shown after intro) */}
-        {(sessionState !== 'intro') && (
-          <div className="max-w-lg w-full rounded-3xl border-[3px] border-gray-700 bg-gray-900 p-5"
-            style={{ boxShadow: '5px 5px 0px #111827' }}>
-            <p className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Interview question</p>
-            <p className="text-gray-100 font-semibold leading-relaxed">{q.text}</p>
-            {followUpQuestion && sessionState !== 'question_speaking' && sessionState !== 'recording_1' && sessionState !== 'processing_1' && (
-              <div className="mt-3 pt-3 border-t border-gray-700">
-                <p className="text-xs font-bold uppercase tracking-widest text-indigo-400 mb-1">Follow-up</p>
-                <p className="text-gray-300 text-sm leading-relaxed">{followUpQuestion}</p>
+        {/* LIVE badge */}
+        {isRecording && (
+          <div style={{ position: 'absolute', top: 16, right: 16, zIndex: 3, display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(220,38,38,0.85)', borderRadius: 6, padding: '4px 10px' }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'white', display: 'inline-block' }}/>
+            <span style={{ color: 'white', fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.08em' }}>LIVE</span>
+          </div>
+        )}
+
+        {/* Intro overlay */}
+        {sessionState === 'intro' && (
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 4 }}>
+            <div style={{ background: 'rgba(10,14,22,0.85)', backdropFilter: 'blur(12px)', borderRadius: 16, padding: '20px 32px', border: '1px solid rgba(255,255,255,0.08)', textAlign: 'center' }}>
+              <p style={{ color: '#e2e8f0', fontSize: '0.95rem', margin: '0 0 6px', fontWeight: 500 }}>Alex is ready to start your interview</p>
+              <p style={{ color: '#6b7280', fontSize: '0.8rem', margin: 0 }}>Click "Start Interview" when you're ready</p>
+            </div>
+          </div>
+        )}
+
+        {/* Scoring overlay */}
+        {sessionState === 'scoring' && !error && (
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.5)', zIndex: 4 }}>
+            <div style={{ background: 'rgba(10,14,22,0.9)', backdropFilter: 'blur(12px)', borderRadius: 16, padding: '24px 36px', border: '1px solid rgba(255,255,255,0.08)', textAlign: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 8 }}>
+                <svg className="animate-spin" width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="10" stroke="#374151" strokeWidth="3"/>
+                  <path d="M12 2a10 10 0 010 20" stroke="#818cf8" strokeWidth="3" strokeLinecap="round"/>
+                </svg>
+                <span style={{ color: '#e2e8f0', fontSize: '0.9rem', fontWeight: 500 }}>Analyzing your interview…</span>
               </div>
-            )}
+              <p style={{ color: '#6b7280', fontSize: '0.78rem', margin: 0 }}>This usually takes 10–15 seconds</p>
+            </div>
           </div>
         )}
 
         {/* Error */}
         {error && (
-          <div className="max-w-lg w-full rounded-2xl border-2 border-red-700 bg-red-950 px-4 py-3">
-            <p className="text-red-300 text-sm">{error}</p>
+          <div style={{ position: 'absolute', bottom: 70, left: '50%', transform: 'translateX(-50%)', zIndex: 5, background: 'rgba(127,29,29,0.92)', backdropFilter: 'blur(8px)', borderRadius: 10, padding: '12px 22px', maxWidth: 480, border: '1px solid rgba(239,68,68,0.25)', textAlign: 'center' }}>
+            <p style={{ color: '#fca5a5', fontSize: '0.875rem', margin: '0 0 10px' }}>{error}</p>
+            <button onClick={() => { setError(''); navigate(`/practice/${type}`) }} style={{ padding: '6px 16px', background: 'transparent', border: '1px solid rgba(239,68,68,0.5)', borderRadius: 6, color: '#fca5a5', fontSize: '0.8rem', cursor: 'pointer' }}>
+              Back to questions
+            </button>
           </div>
         )}
 
-        {/* Controls */}
-        <div className="flex flex-col items-center gap-4">
-
-          {/* INTRO */}
-          {sessionState === 'intro' && (
-            <button
-              onClick={beginInterview}
-              className="px-10 py-4 rounded-3xl border-[3px] border-violet-600 bg-violet-600 text-white font-extrabold text-lg cursor-pointer hover:bg-violet-500 transition-colors"
-              style={{ fontFamily: "'Baloo 2', cursive", boxShadow: '5px 5px 0px #4c1d95' }}
-            >
-              Start interview
-            </button>
-          )}
-
-          {/* SPEAKING STATES */}
-          {(sessionState === 'question_speaking' || sessionState === 'followup_speaking') && (
-            <p className="text-gray-400 text-sm animate-pulse">Alex is speaking… listen carefully</p>
-          )}
-
-          {/* RECORD ANSWER 1 */}
-          {sessionState === 'recording_1' && (
-            <button
-              onClick={stopAnswer1}
-              className="px-10 py-4 rounded-3xl border-[3px] border-red-600 bg-red-600 text-white font-extrabold text-lg cursor-pointer hover:bg-red-500 transition-colors flex items-center gap-3"
-              style={{ fontFamily: "'Baloo 2', cursive", boxShadow: '5px 5px 0px #7f1d1d' }}
-            >
-              <span className="w-3 h-3 rounded-full bg-white animate-pulse" />
-              Stop recording
-            </button>
-          )}
-
-          {/* START RECORDING ANSWER 1 */}
-          {sessionState === 'recording_1' ? null : sessionState === 'question_speaking' ? null : null}
-
-          {/* RECORD ANSWER 2 */}
-          {sessionState === 'recording_2' && (
-            <button
-              onClick={stopAnswer2}
-              className="px-10 py-4 rounded-3xl border-[3px] border-red-600 bg-red-600 text-white font-extrabold text-lg cursor-pointer hover:bg-red-500 transition-colors flex items-center gap-3"
-              style={{ fontFamily: "'Baloo 2', cursive", boxShadow: '5px 5px 0px #7f1d1d' }}
-            >
-              <span className="w-3 h-3 rounded-full bg-white animate-pulse" />
-              Stop recording
-            </button>
-          )}
-
-          {/* PROCESSING / SCORING */}
-          {(sessionState === 'processing_1' || sessionState === 'processing_2' || (sessionState === 'scoring' && !error)) && (
-            <div className="flex items-center gap-3 text-gray-400">
-              <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-              </svg>
-              <span className="text-sm">
-                {sessionState === 'scoring' ? 'Scoring your full interview…' : 'Processing audio…'}
-              </span>
-            </div>
-          )}
-
-          {/* Scoring error — show retry */}
-          {sessionState === 'scoring' && error && (
-            <div className="flex flex-col items-center gap-3">
-              <p className="text-red-400 text-sm text-center max-w-xs">{error}</p>
-              <button
-                onClick={() => { setError(''); navigate(`/practice/${type}`) }}
-                className="px-6 py-2 rounded-2xl border-2 border-gray-600 text-gray-300 text-sm font-bold cursor-pointer hover:bg-gray-800 transition-colors"
-              >
-                Back to questions
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* Recording hint */}
-        {isRecording && !caption && (
-          <p className="text-gray-500 text-xs">Recording in progress — start speaking to see captions.</p>
+        {/* Question subtitle */}
+        {subtitle && !error && (
+          <div style={{ position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)', maxWidth: 'min(620px, calc(100% - 48px))', zIndex: 3, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(6px)', borderRadius: 10, padding: '10px 22px', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <p style={{ color: '#f0f0f0', fontSize: '0.9rem', textAlign: 'center', lineHeight: 1.55, margin: 0 }}>{subtitle}</p>
+          </div>
         )}
-      </div>
 
-      {/* Live caption bar */}
-      {isRecording && (
-        <div className="px-6 pb-6">
-          <div
-            className="max-w-2xl mx-auto rounded-2xl px-5 py-3 border border-gray-700 bg-gray-900 min-h-[48px] flex items-center gap-3"
-            style={{ boxShadow: '0 0 0 1px rgba(255,255,255,0.04)' }}
-          >
-            {/* Mic icon */}
-            <span className="shrink-0">
-              <svg className="w-4 h-4 text-red-400 animate-pulse" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 1a4 4 0 014 4v6a4 4 0 01-8 0V5a4 4 0 014-4zm-1 17.93V21h-2v2h6v-2h-2v-2.07A8.001 8.001 0 0120 11h-2a6 6 0 01-12 0H4a8.001 8.001 0 017 6.93z"/>
-              </svg>
-            </span>
+        {/* Live captions */}
+        {isRecording && (
+          <div style={{ position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)', maxWidth: 'min(580px, calc(100% - 48px))', zIndex: 3, background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(6px)', borderRadius: 10, padding: '8px 18px', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="#ef4444" className="animate-pulse" style={{ flexShrink: 0 }}>
+              <path d="M12 1a4 4 0 014 4v6a4 4 0 01-8 0V5a4 4 0 014-4zm-1 17.93V21h-2v2h6v-2h-2v-2.07A8.001 8.001 0 0020 11h-2a6 6 0 01-12 0H4a8.001 8.001 0 017 6.93z"/>
+            </svg>
             {caption
-              ? <p className="text-gray-200 text-sm leading-relaxed">{caption}</p>
-              : <p className="text-gray-600 text-sm italic">Listening…</p>
+              ? <p style={{ color: '#f0f0f0', fontSize: '0.875rem', margin: 0, lineHeight: 1.4 }}>{caption}</p>
+              : <p style={{ color: '#6b7280', fontSize: '0.875rem', margin: 0, fontStyle: 'italic' }}>Listening…</p>
             }
           </div>
-        </div>
-      )}
+        )}
+
+        {/* Silence countdown overlay */}
+        {isRecording && silenceCountdown !== null && (
+          <div style={{ position: 'absolute', top: 16, left: 16, zIndex: 3, background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(6px)', borderRadius: 8, padding: '5px 14px', border: '1px solid rgba(249,115,22,0.3)', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#f97316', display: 'inline-block' }} className="animate-pulse"/>
+            <span style={{ color: '#fdba74', fontSize: '0.78rem' }}>Finishing in {silenceCountdown}s…</span>
+          </div>
+        )}
+
+        <UserCamera isSpeaking={isRecording && caption.length > 0} />
+      </div>
+
+      {/* ── Bottom toolbar ── */}
+      <div style={{ height: 72, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, background: '#16181f', borderTop: '1px solid #232630', position: 'relative', zIndex: 10 }}>
+        {sessionState === 'intro' ? (
+          <button
+            onClick={beginInterview}
+            style={{ padding: '12px 44px', background: '#7c3aed', color: 'white', border: 'none', borderRadius: 50, fontWeight: 700, fontSize: '1rem', cursor: 'pointer', boxShadow: '0 0 0 2px rgba(124,58,237,0.3), 0 4px 20px rgba(124,58,237,0.25)', transition: 'background 0.15s' }}
+            onMouseEnter={e => { e.currentTarget.style.background = '#6d28d9' }}
+            onMouseLeave={e => { e.currentTarget.style.background = '#7c3aed' }}
+          >
+            Start Interview
+          </button>
+        ) : (
+          <>
+            {/* Mic / Stop */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+              <button
+                onClick={isRecording ? (sessionState === 'recording_1' ? stopAnswer1 : stopAnswer2) : undefined}
+                style={{ width: 48, height: 48, borderRadius: '50%', background: isRecording ? '#ef4444' : '#232630', border: 'none', cursor: isRecording ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.2s', boxShadow: isRecording ? '0 0 0 3px rgba(239,68,68,0.25)' : 'none' }}
+              >
+                {isRecording ? (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><rect x="4" y="4" width="16" height="16" rx="3"/></svg>
+                ) : (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="#6b7280"><path d="M12 1a4 4 0 014 4v6a4 4 0 01-8 0V5a4 4 0 014-4zm-1 17.93V21h-2v2h6v-2h-2v-2.07A8.001 8.001 0 0020 11h-2a6 6 0 01-12 0H4a8.001 8.001 0 017 6.93z"/></svg>
+                )}
+              </button>
+              <span style={{ color: silenceCountdown !== null ? '#f97316' : '#6b7280', fontSize: '0.65rem' }}>
+                {silenceCountdown !== null ? `${silenceCountdown}s…` : isRecording ? 'Stop' : 'Mic'}
+              </span>
+            </div>
+
+            {/* Camera */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+              <button style={{ width: 48, height: 48, borderRadius: '50%', background: '#232630', border: 'none', cursor: 'default', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+              </button>
+              <span style={{ color: '#6b7280', fontSize: '0.65rem' }}>Camera</span>
+            </div>
+
+            {/* Processing indicator */}
+            {isProcessingState && !error && sessionState !== 'scoring' && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 7, color: '#6b7280', position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
+                <svg className="animate-spin" width="13" height="13" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="10" stroke="#374151" strokeWidth="3"/>
+                  <path d="M12 2a10 10 0 010 20" stroke="#6b7280" strokeWidth="3" strokeLinecap="round"/>
+                </svg>
+                <span style={{ fontSize: '0.78rem' }}>Processing audio…</span>
+              </div>
+            )}
+
+            {/* End Interview */}
+            <button
+              onClick={() => { stopAudio(); releaseMic(); navigate(`/practice/${type}`) }}
+              style={{ position: 'absolute', right: 24, padding: '9px 20px', background: '#dc2626', color: 'white', border: 'none', borderRadius: 8, fontWeight: 600, fontSize: '0.875rem', cursor: 'pointer', transition: 'background 0.15s' }}
+              onMouseEnter={e => { e.currentTarget.style.background = '#b91c1c' }}
+              onMouseLeave={e => { e.currentTarget.style.background = '#dc2626' }}
+            >
+              End Interview
+            </button>
+          </>
+        )}
+      </div>
     </div>
   )
 }
