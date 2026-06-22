@@ -5,17 +5,27 @@ import { useAuth } from '../hooks/useAuth'
 /* ─── Logo ─────────────────────────────────────────────────────────────────── */
 function StarboardLogo({ size = 26 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-      {/* N-S axis */}
-      <line x1="14" y1="3" x2="14" y2="25" stroke="#f0f0f0" strokeWidth="1.2" strokeOpacity="0.35" strokeLinecap="round" />
-      {/* W spoke */}
-      <line x1="3" y1="14" x2="13" y2="14" stroke="#f0f0f0" strokeWidth="1.2" strokeOpacity="0.35" strokeLinecap="round" />
-      {/* E/starboard spoke — violet, brighter */}
-      <line x1="15" y1="14" x2="22" y2="14" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round" />
-      {/* Arrowhead at starboard */}
-      <path d="M20 11.5L24.5 14L20 16.5" fill="#7c3aed" />
-      {/* Center */}
-      <circle cx="14" cy="14" r="2.5" fill="white" />
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* Upper wing */}
+      <polygon points="7,15 21,9 23,15" fill="#374151" />
+      {/* Lower wing */}
+      <polygon points="7,17 21,23 23,17" fill="#374151" />
+      {/* Fuselage */}
+      <polygon points="5,14.5 29,16 5,17.5" fill="#1f2937" />
+      {/* Wing inner highlights */}
+      <line x1="7" y1="15" x2="21" y2="10.5" stroke="#4b5563" strokeWidth="0.6" />
+      <line x1="7" y1="17" x2="21" y2="21.5" stroke="#4b5563" strokeWidth="0.6" />
+      {/* Centerline */}
+      <line x1="9" y1="16" x2="25" y2="16" stroke="#9ca3af" strokeWidth="0.5" strokeOpacity="0.4" />
+      {/* Cockpit */}
+      <circle cx="22" cy="16" r="2" fill="#7f1d1d" />
+      <circle cx="22" cy="16" r="1" fill="#dc2626" />
+      {/* Engine glows */}
+      <ellipse cx="6" cy="13.5" rx="2" ry="1.4" fill="#dc2626" fillOpacity="0.9" />
+      <ellipse cx="6" cy="18.5" rx="2" ry="1.4" fill="#dc2626" fillOpacity="0.9" />
+      {/* Engine inner bright */}
+      <ellipse cx="6" cy="13.5" rx="1" ry="0.7" fill="#fca5a5" />
+      <ellipse cx="6" cy="18.5" rx="1" ry="0.7" fill="#fca5a5" />
     </svg>
   )
 }
