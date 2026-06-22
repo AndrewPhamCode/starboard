@@ -20,14 +20,14 @@ app.add_middleware(
 )
 
 
-app.include_router(questions_router)
-app.include_router(transcribe_router)
-app.include_router(score_router)
-app.include_router(follow_up_router)
-app.include_router(resume_router)
-app.include_router(tts_router)
-app.include_router(company_router)
-app.include_router(leetcode_router)
+app.include_router(questions_router, prefix="/api")
+app.include_router(transcribe_router, prefix="/api")
+app.include_router(score_router, prefix="/api")
+app.include_router(follow_up_router, prefix="/api")
+app.include_router(resume_router, prefix="/api")
+app.include_router(tts_router, prefix="/api")
+app.include_router(company_router, prefix="/api")
+app.include_router(leetcode_router, prefix="/api")
 
 
 @app.get("/health")
