@@ -1,7 +1,6 @@
 import katex from 'katex'
 import 'katex/dist/katex.min.css'
 
-/* ─── Inline LaTeX renderer — splits on $...$ and renders math segments ── */
 function MathText({ text }: { text: string }) {
   const parts = text.split(/\$([^$]+)\$/)
   return (
@@ -46,173 +45,228 @@ interface Props {
 
 const STAR_DIMS = [
   { key: 'situation' as const, label: 'Situation', letter: 'S' },
-  { key: 'task' as const, label: 'Task', letter: 'T' },
-  { key: 'action' as const, label: 'Action', letter: 'A' },
-  { key: 'result' as const, label: 'Result', letter: 'R' },
+  { key: 'task' as const,      label: 'Task',      letter: 'T' },
+  { key: 'action' as const,    label: 'Action',    letter: 'A' },
+  { key: 'result' as const,    label: 'Result',    letter: 'R' },
 ]
 
-function starStyle(val: number) {
-  if (val >= 4) return { bar: 'bg-indigo-500', pill: 'bg-indigo-100 text-indigo-700', letter: 'bg-indigo-600' }
-  if (val === 3) return { bar: 'bg-amber-400', pill: 'bg-amber-100 text-amber-700', letter: 'bg-amber-500' }
-  return { bar: 'bg-red-400', pill: 'bg-red-100 text-red-700', letter: 'bg-red-500' }
+function barColor(val: number) {
+  if (val >= 4) return '#7c3aed'
+  if (val === 3) return '#f59e0b'
+  return '#ef4444'
 }
 
-function deliveryStyle(val: number) {
-  if (val >= 4) return 'bg-emerald-500'
-  if (val === 3) return 'bg-amber-400'
-  return 'bg-red-400'
+function pillStyle(val: number): React.CSSProperties {
+  if (val >= 4) return { background: 'rgba(124,58,237,0.15)', color: '#a78bfa' }
+  if (val === 3) return { background: 'rgba(245,158,11,0.12)', color: '#fbbf24' }
+  return { background: 'rgba(239,68,68,0.12)', color: '#f87171' }
 }
 
-function wpmBadge(wpm: number): { label: string; cls: string } {
-  if (wpm === 0) return { label: '—', cls: 'bg-gray-100 text-gray-500' }
-  if (wpm < 100) return { label: `${wpm} wpm · slow`, cls: 'bg-amber-100 text-amber-700' }
-  if (wpm <= 160) return { label: `${wpm} wpm · ideal`, cls: 'bg-emerald-100 text-emerald-700' }
-  return { label: `${wpm} wpm · fast`, cls: 'bg-red-100 text-red-700' }
+function deliveryBarColor(val: number) {
+  if (val >= 4) return '#10b981'
+  if (val === 3) return '#f59e0b'
+  return '#ef4444'
 }
 
-function fillerBadge(count: number): { cls: string } {
-  if (count <= 2) return { cls: 'bg-emerald-100 text-emerald-700' }
-  if (count <= 5) return { cls: 'bg-amber-100 text-amber-700' }
-  return { cls: 'bg-red-100 text-red-700' }
+function wpmBadge(wpm: number): { label: string; style: React.CSSProperties } {
+  if (wpm === 0) return { label: '— wpm', style: { background: 'rgba(255,255,255,0.06)', color: '#6b6b7a' } }
+  if (wpm < 100) return { label: `${wpm} wpm · slow`, style: { background: 'rgba(245,158,11,0.12)', color: '#fbbf24' } }
+  if (wpm <= 160) return { label: `${wpm} wpm · ideal`, style: { background: 'rgba(16,185,129,0.12)', color: '#34d399' } }
+  return { label: `${wpm} wpm · fast`, style: { background: 'rgba(239,68,68,0.12)', color: '#f87171' } }
+}
+
+function fillerBadgeStyle(count: number): React.CSSProperties {
+  if (count <= 2) return { background: 'rgba(16,185,129,0.12)', color: '#34d399' }
+  if (count <= 5) return { background: 'rgba(245,158,11,0.12)', color: '#fbbf24' }
+  return { background: 'rgba(239,68,68,0.12)', color: '#f87171' }
+}
+
+const S: Record<string, React.CSSProperties> = {
+  wrap: {
+    marginTop: 24,
+    borderRadius: 14,
+    border: '1px solid #2a2a2e',
+    background: '#141416',
+    overflow: 'hidden',
+    fontFamily: "'Inter', system-ui, sans-serif",
+  },
+  header: {
+    padding: '20px 24px',
+    borderBottom: '1px solid #2a2a2e',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    background: 'linear-gradient(135deg, rgba(124,58,237,0.2) 0%, rgba(99,102,241,0.1) 100%)',
+  },
+  sectionLabel: {
+    fontFamily: "'JetBrains Mono', monospace",
+    fontSize: '0.68rem',
+    letterSpacing: '0.12em',
+    color: '#6b6b7a',
+    marginBottom: 12,
+  },
+  section: {
+    padding: '20px 24px',
+    borderBottom: '1px solid #1c1c1f',
+  },
+  barRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 12,
+  },
+  barLabel: {
+    width: 80,
+    flexShrink: 0,
+    fontSize: '0.82rem',
+    color: '#a1a1aa',
+    fontWeight: 500,
+  },
+  barTrack: {
+    flex: 1,
+    height: 5,
+    background: '#1c1c1f',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  pill: {
+    flexShrink: 0,
+    fontSize: '0.72rem',
+    fontWeight: 700,
+    padding: '2px 8px',
+    borderRadius: 100,
+    fontFamily: "'JetBrains Mono', monospace",
+  },
+  coachCard: {
+    padding: '14px 16px',
+    border: '1px solid rgba(124,58,237,0.2)',
+    borderRadius: 10,
+    background: 'rgba(124,58,237,0.05)',
+  },
+  rewriteCard: {
+    padding: '14px 16px',
+    border: '1px solid #2a2a2e',
+    borderRadius: 10,
+    background: '#1c1c1f',
+    marginBottom: 10,
+  },
 }
 
 export default function StarScoreCard({ result }: Props) {
   const overall = Math.round(
     (result.situation + result.task + result.action + result.result) / 4
   )
-
   const d = result.delivery
   const hasFollowUp = result.follow_up_handling != null
+  const wpm = wpmBadge(d?.words_per_minute ?? 0)
 
   return (
-    <div className="mt-6 rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+    <div style={S.wrap}>
 
       {/* Header */}
-      <div className="bg-gradient-to-r from-indigo-600 to-violet-600 px-6 py-5 flex items-center justify-between">
+      <div style={S.header}>
         <div>
-          <p className="text-indigo-100 text-xs font-semibold uppercase tracking-widest mb-0.5">AI Feedback</p>
-          <h3 className="text-white font-bold text-lg">Interview Score</h3>
-        </div>
-        <div className="text-right">
-          <div className="text-4xl font-extrabold text-white">{overall}</div>
-          <div className="text-indigo-200 text-xs font-medium">out of 5</div>
-        </div>
-      </div>
-
-      <div className="p-6 space-y-7">
-
-        {/* ── STAR bars ── */}
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-3">STAR Scores</p>
-          <div className="space-y-3">
-            {STAR_DIMS.map(({ key, label }) => {
-              const val = result[key]
-              const styles = starStyle(val)
-              return (
-                <div key={key} className="flex items-center gap-3">
-                  <span className="w-20 shrink-0 text-sm text-gray-600 font-medium">{label}</span>
-                  <div className="flex-1 bg-gray-100 rounded-full h-2.5 overflow-hidden">
-                    <div
-                      className={`h-2.5 rounded-full transition-all duration-700 ease-out ${styles.bar}`}
-                      style={{ width: `${(val / 5) * 100}%` }}
-                    />
-                  </div>
-                  <span className={`shrink-0 text-xs font-bold px-2 py-0.5 rounded-full ${styles.pill}`}>
-                    {val}/5
-                  </span>
-                </div>
-              )
-            })}
-
-            {/* Follow-up handling bar */}
-            {hasFollowUp && (
-              <div className="flex items-center gap-3 pt-1 border-t border-gray-100">
-                <span className="w-20 shrink-0 text-sm text-gray-600 font-medium">Follow-up</span>
-                <div className="flex-1 bg-gray-100 rounded-full h-2.5 overflow-hidden">
-                  <div
-                    className={`h-2.5 rounded-full transition-all duration-700 ease-out ${starStyle(result.follow_up_handling!).bar}`}
-                    style={{ width: `${(result.follow_up_handling! / 5) * 100}%` }}
-                  />
-                </div>
-                <span className={`shrink-0 text-xs font-bold px-2 py-0.5 rounded-full ${starStyle(result.follow_up_handling!).pill}`}>
-                  {result.follow_up_handling}/5
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* ── Delivery section ── */}
-        {d && (
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-3">Delivery</p>
-
-            {/* Filler words + WPM badges */}
-            <div className="flex flex-wrap gap-2 mb-4">
-              <span className={`text-xs font-bold px-3 py-1 rounded-full ${fillerBadge(d.filler_word_count).cls}`}>
-                {d.filler_word_count} filler word{d.filler_word_count !== 1 ? 's' : ''}
-              </span>
-              <span className={`text-xs font-bold px-3 py-1 rounded-full ${wpmBadge(d.words_per_minute).cls}`}>
-                {wpmBadge(d.words_per_minute).label}
-              </span>
-            </div>
-
-            {/* Confidence + Flow bars */}
-            <div className="space-y-3">
-              {[
-                { label: 'Confidence', val: d.confidence },
-                { label: 'Flow', val: d.flow },
-              ].map(({ label, val }) => (
-                <div key={label} className="flex items-center gap-3">
-                  <span className="w-20 shrink-0 text-sm text-gray-600 font-medium">{label}</span>
-                  <div className="flex-1 bg-gray-100 rounded-full h-2.5 overflow-hidden">
-                    <div
-                      className={`h-2.5 rounded-full transition-all duration-700 ease-out ${deliveryStyle(val)}`}
-                      style={{ width: `${(val / 5) * 100}%` }}
-                    />
-                  </div>
-                  <span className="shrink-0 text-xs font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
-                    {val}/5
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* ── Coaching note ── */}
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2">Coaching note</p>
-          <p className="text-gray-700 text-sm leading-relaxed bg-gray-50 rounded-xl p-4 border border-gray-100">
-            {result.feedback}
+          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.65rem', letterSpacing: '0.12em', color: '#a78bfa', marginBottom: 4 }}>
+            AI FEEDBACK
           </p>
+          <h3 style={{ fontFamily: "'Space Grotesk', system-ui, sans-serif", fontWeight: 600, fontSize: '1.05rem', color: '#f0f0f0', margin: 0 }}>
+            Interview Score
+          </h3>
         </div>
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ fontFamily: "'Space Grotesk', system-ui, sans-serif", fontSize: '2.5rem', fontWeight: 700, color: '#f0f0f0', lineHeight: 1 }}>
+            {overall}
+          </div>
+          <div style={{ fontSize: '0.75rem', color: '#6b6b7a', marginTop: 2 }}>out of 5</div>
+        </div>
+      </div>
 
-        {/* ── Per-STAR model rewrite ── */}
-        {result.rewrite && (
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-3">Model rewrite</p>
-            <div className="space-y-3">
-              {STAR_DIMS.map(({ key, label, letter }) => {
-                const val = result[key]
-                const styles = starStyle(val)
-                return (
-                  <div key={key} className="rounded-xl border border-gray-100 bg-gray-50 p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className={`w-6 h-6 rounded-md flex items-center justify-center text-white text-xs font-extrabold shrink-0 ${styles.letter}`}>
-                        {letter}
-                      </span>
-                      <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide">{label}</span>
-                    </div>
-                    <p className="text-gray-700 text-sm leading-relaxed"><MathText text={result.rewrite[key]} /></p>
-                  </div>
-                )
-              })}
+      {/* STAR bars */}
+      <div style={S.section}>
+        <p style={S.sectionLabel}>STAR SCORES</p>
+        {STAR_DIMS.map(({ key, label }) => {
+          const val = result[key]
+          return (
+            <div key={key} style={S.barRow}>
+              <span style={S.barLabel}>{label}</span>
+              <div style={S.barTrack}>
+                <div style={{ height: '100%', width: `${(val / 5) * 100}%`, background: barColor(val), borderRadius: 3, transition: 'width 0.7s ease-out' }} />
+              </div>
+              <span style={{ ...S.pill, ...pillStyle(val) }}>{val}/5</span>
             </div>
+          )
+        })}
+        {hasFollowUp && (
+          <div style={{ ...S.barRow, paddingTop: 8, borderTop: '1px solid #1c1c1f' }}>
+            <span style={S.barLabel}>Follow-up</span>
+            <div style={S.barTrack}>
+              <div style={{ height: '100%', width: `${(result.follow_up_handling! / 5) * 100}%`, background: barColor(result.follow_up_handling!), borderRadius: 3 }} />
+            </div>
+            <span style={{ ...S.pill, ...pillStyle(result.follow_up_handling!) }}>{result.follow_up_handling}/5</span>
           </div>
         )}
-
       </div>
+
+      {/* Delivery */}
+      {d && (
+        <div style={S.section}>
+          <p style={S.sectionLabel}>DELIVERY</p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
+            <span style={{ ...S.pill, ...fillerBadgeStyle(d.filler_word_count), padding: '4px 12px', fontSize: '0.75rem' }}>
+              {d.filler_word_count} filler word{d.filler_word_count !== 1 ? 's' : ''}
+            </span>
+            <span style={{ ...S.pill, ...wpm.style, padding: '4px 12px', fontSize: '0.75rem' }}>
+              {wpm.label}
+            </span>
+          </div>
+          {[{ label: 'Confidence', val: d.confidence }, { label: 'Flow', val: d.flow }].map(({ label, val }) => (
+            <div key={label} style={S.barRow}>
+              <span style={S.barLabel}>{label}</span>
+              <div style={S.barTrack}>
+                <div style={{ height: '100%', width: `${(val / 5) * 100}%`, background: deliveryBarColor(val), borderRadius: 3 }} />
+              </div>
+              <span style={{ ...S.pill, background: 'rgba(255,255,255,0.05)', color: '#6b6b7a' }}>{val}/5</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Coaching note */}
+      <div style={S.section}>
+        <p style={S.sectionLabel}>COACHING NOTE</p>
+        <div style={S.coachCard}>
+          <p style={{ fontSize: '0.85rem', color: '#a1a1aa', lineHeight: 1.6, margin: 0 }}>{result.feedback}</p>
+        </div>
+      </div>
+
+      {/* Model rewrite */}
+      {result.rewrite && (
+        <div style={{ padding: '20px 24px' }}>
+          <p style={S.sectionLabel}>MODEL REWRITE</p>
+          {STAR_DIMS.map(({ key, label, letter }) => {
+            const val = result[key]
+            return (
+              <div key={key} style={S.rewriteCard}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                  <div style={{
+                    width: 22, height: 22, borderRadius: 6, flexShrink: 0,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: barColor(val), fontSize: '0.65rem', fontWeight: 700, color: '#fff',
+                  }}>
+                    {letter}
+                  </div>
+                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.65rem', letterSpacing: '0.1em', color: '#52525b' }}>
+                    {label.toUpperCase()}
+                  </span>
+                </div>
+                <p style={{ fontSize: '0.85rem', color: '#a1a1aa', lineHeight: 1.6, margin: 0 }}>
+                  <MathText text={result.rewrite[key]} />
+                </p>
+              </div>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }

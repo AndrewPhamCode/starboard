@@ -26,13 +26,12 @@ async def generate_follow_up(body: FollowUpRequest):
     client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
 
     message = client.messages.create(
-        model="claude-sonnet-4-6",
-        max_tokens=100,
+        model="claude-haiku-4-5-20251001",
+        max_tokens=60,
         system=(
-            "You are a senior technical interviewer conducting a live interview. "
-            "Given the original question and the candidate's answer, write ONE concise follow-up question "
-            "(maximum 25 words) that probes the weakest or most vague part of their answer. "
-            "Return only the question text — no JSON, no preamble, no quotation marks."
+            "You are a senior technical interviewer. Given the original question and the candidate's answer, "
+            "write ONE sharp follow-up question (max 20 words) that targets the weakest or vaguest part of their answer. "
+            "Sound like a real person — not a chatbot. No praise. No preamble. Return only the question."
         ),
         messages=[{
             "role": "user",

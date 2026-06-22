@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { API_URL } from '../lib/api'
 
 type RecordState = 'idle' | 'recording' | 'transcribing'
 
@@ -70,7 +71,7 @@ export default function RecordButton({ onTranscript }: Props) {
         formData.append('audio', blob, `recording.${ext}`)
 
         try {
-          const res = await fetch('/api/transcribe', { method: 'POST', body: formData })
+          const res = await fetch(`${API_URL}/api/transcribe`, { method: 'POST', body: formData })
           if (!res.ok) {
             const detail = await res.json().then((d) => d.detail).catch(() => res.statusText)
             throw new Error(detail)

@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import type { ScoreResult } from '../components/StarScoreCard'
 import StarScoreCard from '../components/StarScoreCard'
+import { supabase } from '../lib/supabase'
+import { API_URL } from '../lib/api'
 
 type SessionState =
   | 'intro'
@@ -50,12 +52,70 @@ function stopAudio() {
 async function speak(text: string, onEnd: () => void) {
   stopAudio()
   try {
-    const res = await fetch('/api/tts', {
+    const res = await fetch(`${API_URL}/api/tts`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text }),
     })
     if (!res.ok) throw new Error('TTS request failed')
+
+    // MediaSource streaming: start playing as chunks arrive (Chrome/Firefox)
+    if (typeof MediaSource !== 'undefined' && MediaSource.isTypeSupported('audio/mpeg') && res.body) {
+      await new Promise<void>((resolve) => {
+        const ms = new MediaSource()
+        const objUrl = URL.createObjectURL(ms)
+        const audio = new Audio(objUrl)
+        activeAudio = audio
+
+        let settled = false
+        const finish = () => {
+          if (settled) return
+          settled = true
+          URL.revokeObjectURL(objUrl)
+          activeAudio = null
+          onEnd()
+          resolve()
+        }
+        audio.onended = finish
+        audio.onerror = finish
+
+        ms.addEventListener('sourceopen', async () => {
+          let sb: SourceBuffer
+          try { sb = ms.addSourceBuffer('audio/mpeg') }
+          catch { finish(); return }
+
+          let playStarted = false
+          const tryPlay = () => {
+            if (!playStarted) { playStarted = true; audio.play().catch(() => {}) }
+          }
+          audio.addEventListener('canplay', tryPlay, { once: true })
+
+          const reader = res.body!.getReader()
+          try {
+            for (;;) {
+              const { done, value } = await reader.read()
+              if (done) {
+                if (ms.readyState === 'open') ms.endOfStream()
+                tryPlay()
+                break
+              }
+              await new Promise<void>((ok, fail) => {
+                sb.addEventListener('updateend', () => ok(), { once: true })
+                sb.addEventListener('error', fail, { once: true })
+                try { sb.appendBuffer(value) } catch (e) { fail(e) }
+              })
+              tryPlay()
+            }
+          } catch {
+            if (ms.readyState === 'open') ms.endOfStream()
+            finish()
+          }
+        })
+      })
+      return
+    }
+
+    // Fallback: collect full blob then play (Safari)
     const blob = await res.blob()
     const url = URL.createObjectURL(blob)
     const audio = new Audio(url)
@@ -64,7 +124,6 @@ async function speak(text: string, onEnd: () => void) {
     audio.onerror = () => { URL.revokeObjectURL(url); activeAudio = null; onEnd() }
     await audio.play()
   } catch {
-    // Fallback to browser TTS if API is unavailable
     window.speechSynthesis.cancel()
     const utterance = new SpeechSynthesisUtterance(text)
     utterance.rate = 0.92
@@ -502,13 +561,13 @@ export default function InterviewSession() {
 
       const form = new FormData()
       form.append('audio', blob, 'answer.webm')
-      const transcribeRes = await fetch('/api/transcribe', { method: 'POST', body: form })
+      const transcribeRes = await fetch(`${API_URL}/api/transcribe`, { method: 'POST', body: form })
       if (!transcribeRes.ok) throw new Error(await apiError(transcribeRes))
       const { transcript } = await transcribeRes.json()
       if (!transcript) throw new Error('Transcription returned empty — please speak clearly and try again.')
       setTranscript1(transcript)
 
-      const fuRes = await fetch('/api/follow-up', {
+      const fuRes = await fetch(`${API_URL}/api/follow-up`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question: q.text, transcript }),
@@ -542,14 +601,14 @@ export default function InterviewSession() {
 
       const form = new FormData()
       form.append('audio', blob, 'answer.webm')
-      const transcribeRes = await fetch('/api/transcribe', { method: 'POST', body: form })
+      const transcribeRes = await fetch(`${API_URL}/api/transcribe`, { method: 'POST', body: form })
       if (!transcribeRes.ok) throw new Error(await apiError(transcribeRes))
       const { transcript: followUpTranscript } = await transcribeRes.json()
       setTranscript2(followUpTranscript ?? '')
 
       setSessionState('scoring')
 
-      const scoreRes = await fetch('/api/score', {
+      const scoreRes = await fetch(`${API_URL}/api/score`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -564,6 +623,17 @@ export default function InterviewSession() {
       if (!scoreRes.ok) throw new Error(await apiError(scoreRes))
       const result = await scoreRes.json()
       setScore(result as ScoreResult)
+      // Silently persist session if user is signed in
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        if (!user) return
+        supabase.from('interview_sessions').insert({
+          user_id: user.id,
+          type: 'behavioral',
+          question: q.text,
+          transcript: [transcript1, followUpTranscript].filter(Boolean).join('\n\n'),
+          score: result,
+        })
+      })
       releaseMic()
       setSessionState('results')
     } catch (e) {
@@ -581,35 +651,51 @@ export default function InterviewSession() {
   /* ─── Results view ─────────────────────────────────────────────────────── */
   if (sessionState === 'results' && score) {
     return (
-      <div className="min-h-screen bg-[#FEFCE8]" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
-        <div className="max-w-3xl mx-auto px-6 py-10">
+      <div style={{ minHeight: '100vh', background: '#0c0c0e', fontFamily: "'Inter', system-ui, sans-serif" }}>
+        <div style={{ maxWidth: 680, margin: '0 auto', padding: '32px 24px' }}>
           {/* Header */}
-          <div className="flex items-center justify-between mb-8">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
             <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-1">Interview Complete</p>
-              <h1 className="text-2xl font-extrabold text-gray-900" style={{ fontFamily: "'Baloo 2', cursive" }}>
+              <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.65rem', letterSpacing: '0.12em', color: '#52525b', marginBottom: 4 }}>
+                INTERVIEW COMPLETE
+              </p>
+              <h1 style={{ fontFamily: "'Space Grotesk', system-ui, sans-serif", fontWeight: 700, fontSize: '1.4rem', color: '#f0f0f0', margin: 0, letterSpacing: '-0.02em' }}>
                 Your Results
               </h1>
             </div>
             <button
               onClick={() => navigate(`/practice/${type}`)}
-              className="px-5 py-2 rounded-2xl border-[3px] border-gray-300 bg-white font-bold text-sm text-gray-600 cursor-pointer hover:bg-gray-50 transition-colors"
-              style={{ boxShadow: '3px 3px 0px #d1d5db' }}
+              style={{
+                padding: '8px 18px',
+                borderRadius: 8,
+                border: '1px solid #2a2a2e',
+                background: 'transparent',
+                color: '#6b6b7a',
+                fontSize: '0.85rem',
+                fontWeight: 500,
+                cursor: 'pointer',
+                fontFamily: "'Inter', system-ui, sans-serif",
+                transition: 'border-color 0.15s, color 0.15s',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#52525b'; e.currentTarget.style.color = '#f0f0f0' }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#2a2a2e'; e.currentTarget.style.color = '#6b6b7a' }}
             >
               ← Back to questions
             </button>
           </div>
 
-          {/* Transcripts summary */}
-          <div className="space-y-3 mb-8">
-            <div className="rounded-2xl border-[3px] border-violet-200 bg-violet-50 p-4" style={{ boxShadow: '3px 3px 0px #ddd6fe' }}>
-              <p className="text-xs font-bold uppercase tracking-wide text-violet-600 mb-1">Your answer</p>
-              <p className="text-gray-700 text-sm leading-relaxed">{transcript1}</p>
+          {/* Transcripts */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 8 }}>
+            <div style={{ padding: '14px 16px', border: '1px solid rgba(124,58,237,0.2)', borderRadius: 10, background: 'rgba(124,58,237,0.05)' }}>
+              <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.65rem', letterSpacing: '0.1em', color: '#7c3aed', marginBottom: 6 }}>YOUR ANSWER</p>
+              <p style={{ color: '#a1a1aa', fontSize: '0.875rem', lineHeight: 1.6, margin: 0 }}>{transcript1}</p>
             </div>
             {transcript2 && (
-              <div className="rounded-2xl border-[3px] border-indigo-200 bg-indigo-50 p-4" style={{ boxShadow: '3px 3px 0px #c7d2fe' }}>
-                <p className="text-xs font-bold uppercase tracking-wide text-indigo-600 mb-1">Follow-up: "{followUpQuestion}"</p>
-                <p className="text-gray-700 text-sm leading-relaxed">{transcript2}</p>
+              <div style={{ padding: '14px 16px', border: '1px solid rgba(99,102,241,0.2)', borderRadius: 10, background: 'rgba(99,102,241,0.05)' }}>
+                <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.65rem', letterSpacing: '0.1em', color: '#818cf8', marginBottom: 6 }}>
+                  FOLLOW-UP: "{followUpQuestion}"
+                </p>
+                <p style={{ color: '#a1a1aa', fontSize: '0.875rem', lineHeight: 1.6, margin: 0 }}>{transcript2}</p>
               </div>
             )}
           </div>
@@ -626,9 +712,16 @@ export default function InterviewSession() {
 
       {/* Top bar */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800">
-        <span style={{ fontFamily: "'Baloo 2', cursive", fontWeight: 800, fontSize: '1.2rem', color: '#fff' }}>
-          Star<span style={{ color: '#f97316' }}>board</span>
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <svg width="20" height="20" viewBox="0 0 28 28" fill="none">
+            <line x1="14" y1="3" x2="14" y2="25" stroke="#f0f0f0" strokeWidth="1.2" strokeOpacity="0.35" strokeLinecap="round" />
+            <line x1="3" y1="14" x2="13" y2="14" stroke="#f0f0f0" strokeWidth="1.2" strokeOpacity="0.35" strokeLinecap="round" />
+            <line x1="15" y1="14" x2="22" y2="14" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round" />
+            <path d="M20 11.5L24.5 14L20 16.5" fill="#7c3aed" />
+            <circle cx="14" cy="14" r="2.5" fill="white" />
+          </svg>
+          <span style={{ fontFamily: "'Space Grotesk', system-ui, sans-serif", fontWeight: 600, fontSize: '0.95rem', color: '#f0f0f0' }}>starboard</span>
+        </div>
         <div className="flex items-center gap-3">
           {isRecording && (
             <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-red-900 border border-red-600">

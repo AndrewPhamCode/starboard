@@ -98,29 +98,31 @@ async def get_interviewer_message(body: InterviewerMessageRequest):
 
     trigger_instructions = {
         "start": (
-            "The candidate has just opened the problem. Greet them warmly and ask them to "
-            "start by clarifying the problem — what are the constraints, edge cases, and expected "
-            "input/output format? Encourage them to think out loud before writing any code."
+            "The candidate just opened the problem. Introduce yourself briefly — one sentence — then ask them "
+            "to start by clarifying the problem. Don't be warm or effusive. Just get to it."
         ),
         "run_error": (
-            "The candidate just ran their code and got an error. Reference the error naturally "
-            "and ask them to walk you through what they think went wrong and how they plan to fix it. "
-            "Be encouraging — errors are part of the process."
+            "The candidate's code just errored. Reference the specific error output. "
+            "Ask them what they think caused it. Don't soften it — errors happen, move on."
         ),
         "run_success": (
-            "The candidate's code just ran successfully. Congratulate them briefly, then ask them "
-            "to analyze the time and space complexity of their solution. Then ask if they can think "
-            "of a more optimal approach."
+            "The candidate's code ran successfully. Acknowledge it in one neutral sentence — no praise. "
+            "Immediately ask ONE probing follow-up: time/space complexity, an edge case they may have missed, "
+            "or how it scales. Pick whichever is most interesting given their actual solution."
         ),
         "idle": (
-            "The candidate has been quiet for a while. Gently check in and ask them to verbalize "
-            "their current thinking — what approach are they considering and what's blocking them?"
+            "The candidate has been quiet. Ask what they're thinking. One sentence only."
+        ),
+        "user_question": (
+            "The candidate just spoke. Look at their most recent message and respond directly to it. "
+            "If they asked about constraints, examples, or clarifications, answer it — a real interviewer always does. "
+            "If they explained an approach, engage with it: push on what's unclear, or probe deeper if it's solid. "
+            "If they asked for a hint on the algorithm, guide with a question, not an answer. "
+            "Match their energy. Don't script it."
         ),
         "end": (
-            "The interview is wrapping up. Ask one or two meaningful follow-up questions based on "
-            "the problem and the candidate's solution. Focus on edge cases they may have missed, "
-            "alternative approaches, or how they would adapt the solution for scale. "
-            "Then wrap up warmly."
+            "The interview is wrapping up. Ask one sharp follow-up based on their actual solution — "
+            "an edge case, complexity, or scale scenario they haven't addressed. Then end the interview cleanly."
         ),
     }
 
@@ -133,7 +135,7 @@ async def get_interviewer_message(body: InterviewerMessageRequest):
             run_context = f"\nLatest output: {body.run_output['stdout'][:200]}"
 
     hint_context = ""
-    if body.follow_up_hints and body.trigger == "end":
+    if body.follow_up_hints and body.trigger in ("end", "run_success"):
         hint_context = f"\nFollow-up hints to draw from: {'; '.join(body.follow_up_hints)}"
 
     conversation = "\n".join(
@@ -143,13 +145,17 @@ async def get_interviewer_message(body: InterviewerMessageRequest):
 
     client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
     message = client.messages.create(
-        model="claude-sonnet-4-6",
-        max_tokens=256,
+        model="claude-haiku-4-5-20251001",
+        max_tokens=128,
         system=(
-            "You are a friendly but thorough technical interviewer at a top tech company. "
-            "You speak naturally and conversationally — like a real interviewer, not a robot. "
-            "Keep your responses concise: 2-4 sentences. Ask only one clear question at a time. "
-            "Never give away the answer. Focus on getting the candidate to think out loud."
+            "You are a senior engineer running a real technical interview. You are direct and occasionally impatient. "
+            "You never praise unless something is genuinely impressive — a correct answer gets a neutral 'Got it.' "
+            "and an immediate follow-up push. An incorrect approach gets a redirect: 'Hmm, what happens with an empty input?' "
+            "Rules: 1-2 sentences per turn, never 3. No hollow affirmations — 'Great!', 'Excellent!', 'That's a solid approach' are banned. "
+            "Reference what the candidate actually said — don't respond generically. "
+            "Answer constraint/clarification questions directly. "
+            "Never give away the algorithm — guide with questions. "
+            "Brief neutral bridges are fine: 'Mm-hmm.', 'Okay.', 'And?'"
         ),
         messages=[{
             "role": "user",
@@ -238,7 +244,8 @@ Return ONLY this JSON:
     "flow": <1-5>
   }},
   "feedback": "<2-3 sentence coaching note highlighting what went well and the top improvement area>",
-  "model_approach": "<One paragraph describing the optimal approach with time/space complexity, e.g. Use a hash map for $O(n)$ time and $O(n)$ space>"
+  "model_approach": "<One paragraph describing the optimal approach with time/space complexity, e.g. Use a hash map for $O(n)$ time and $O(n)$ space>",
+  "follow_up_answer": "<The ideal answer to the follow-up question(s) the interviewer asked (e.g. complexity, edge cases, scaling). If multiple follow-ups were asked, answer all of them. Write 2-4 sentences, clear and direct, as if explaining to the candidate what they should have said.>"
 }}""",
         }],
     )

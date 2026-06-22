@@ -1,59 +1,38 @@
-import { useState, useRef } from 'react'
-import { Link } from 'react-router-dom'
+import { useRef, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../hooks/useAuth'
 
-function scrollToTypes() {
-  document.getElementById('interview-types')?.scrollIntoView({ behavior: 'smooth' })
-}
-
-/* ─── Clay card helper ─────────────────────────────────────────────────────
-   border: 3px solid <borderColor>
-   shadow: hard offset (no blur) gives the clay "lifted" look           */
-interface ClayProps {
-  bg: string
-  border: string
-  shadow: string
-  className?: string
-  children: React.ReactNode
-  style?: React.CSSProperties
-}
-function Clay({ bg, border, shadow, className = '', children, style }: ClayProps) {
+/* ─── Logo ─────────────────────────────────────────────────────────────────── */
+function StarboardLogo({ size = 26 }: { size?: number }) {
   return (
-    <div
-      className={`rounded-3xl border-[3px] ${bg} ${border} ${className}`}
-      style={{ boxShadow: `5px 5px 0px ${shadow}`, ...style }}
-    >
-      {children}
-    </div>
+    <svg width={size} height={size} viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* N-S axis */}
+      <line x1="14" y1="3" x2="14" y2="25" stroke="#f0f0f0" strokeWidth="1.2" strokeOpacity="0.35" strokeLinecap="round" />
+      {/* W spoke */}
+      <line x1="3" y1="14" x2="13" y2="14" stroke="#f0f0f0" strokeWidth="1.2" strokeOpacity="0.35" strokeLinecap="round" />
+      {/* E/starboard spoke — violet, brighter */}
+      <line x1="15" y1="14" x2="22" y2="14" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round" />
+      {/* Arrowhead at starboard */}
+      <path d="M20 11.5L24.5 14L20 16.5" fill="#7c3aed" />
+      {/* Center */}
+      <circle cx="14" cy="14" r="2.5" fill="white" />
+    </svg>
   )
 }
 
-/* ─── Star rating SVG ──────────────────────────────────────────────────── */
-function Stars({ n = 5 }: { n?: number }) {
-  return (
-    <div className="flex gap-0.5">
-      {Array.from({ length: 5 }).map((_, i) => (
-        <svg key={i} className={`w-4 h-4 ${i < n ? 'text-amber-400' : 'text-gray-200'}`} viewBox="0 0 20 20" fill="currentColor">
-          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-        </svg>
-      ))}
-    </div>
-  )
-}
-
-/* ─── Data ──────────────────────────────────────────────────────────────── */
-const COURSES = [
+/* ─── Mode data ─────────────────────────────────────────────────────────────── */
+const MODES = [
   {
     title: 'Behavioral',
     desc: 'Master leadership, conflict, and impact stories with the STAR method.',
     count: '20 questions',
     href: '/practice/behavioral',
-    bg: 'bg-rose-100',
-    border: 'border-rose-400',
-    shadow: '#f87171',
-    iconBg: 'bg-rose-400',
-    soon: false,
+    accent: '#7c3aed',
+    accentBg: 'rgba(124,58,237,0.08)',
+    accentBorder: 'rgba(124,58,237,0.4)',
+    accentGlow: 'rgba(124,58,237,0.15)',
     icon: (
-      <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2.2} stroke="currentColor">
+      <svg width="18" height="18" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0z" />
       </svg>
     ),
@@ -63,61 +42,87 @@ const COURSES = [
     desc: 'System design, debugging, and architecture questions with AI scoring.',
     count: '8 questions',
     href: '/practice/technical',
-    bg: 'bg-violet-100',
-    border: 'border-violet-400',
-    shadow: '#a78bfa',
-    iconBg: 'bg-violet-500',
-    soon: false,
+    accent: '#06b6d4',
+    accentBg: 'rgba(6,182,212,0.08)',
+    accentBorder: 'rgba(6,182,212,0.4)',
+    accentGlow: 'rgba(6,182,212,0.15)',
     icon: (
-      <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2.2} stroke="currentColor">
+      <svg width="18" height="18" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" />
       </svg>
     ),
   },
   {
-    title: 'Resume Screening',
+    title: 'Resume',
     desc: 'Walk through your projects and experience with confidence.',
     count: '4 questions',
     href: '/practice/resume',
-    bg: 'bg-emerald-100',
-    border: 'border-emerald-400',
-    shadow: '#34d399',
-    iconBg: 'bg-emerald-500',
-    soon: false,
+    accent: '#f59e0b',
+    accentBg: 'rgba(245,158,11,0.08)',
+    accentBorder: 'rgba(245,158,11,0.4)',
+    accentGlow: 'rgba(245,158,11,0.15)',
     icon: (
-      <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2.2} stroke="currentColor">
+      <svg width="18" height="18" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
       </svg>
     ),
   },
   {
     title: 'LeetCode',
-    desc: 'Verbalize your algorithmic thinking out loud — coming next.',
-    count: 'Coming soon',
+    desc: 'Talk through algorithms out loud with a live AI interviewer listening.',
+    count: '32+ problems',
     href: '/practice/leetcode',
-    bg: 'bg-amber-100',
-    border: 'border-amber-400',
-    shadow: '#fbbf24',
-    iconBg: 'bg-amber-400',
-    soon: true,
+    accent: '#10b981',
+    accentBg: 'rgba(16,185,129,0.08)',
+    accentBorder: 'rgba(16,185,129,0.4)',
+    accentGlow: 'rgba(16,185,129,0.15)',
     icon: (
-      <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2.2} stroke="currentColor">
+      <svg width="18" height="18" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" d="M14.25 9.75L16.5 12l-2.25 2.25m-4.5 0L7.5 12l2.25-2.25M6 20.25h12A2.25 2.25 0 0020.25 18V6A2.25 2.25 0 0018 3.75H6A2.25 2.25 0 003.75 6v12A2.25 2.25 0 006 20.25z" />
       </svg>
     ),
   },
 ]
 
+
+const FEATURES = [
+  {
+    icon: (
+      <svg width="20" height="20" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
+      </svg>
+    ),
+    title: 'Voice AI',
+    desc: 'Speak your answer naturally. The AI listens for silence and responds in seconds.',
+  },
+  {
+    icon: (
+      <svg width="20" height="20" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+      </svg>
+    ),
+    title: 'Instant Scoring',
+    desc: 'Every answer scored on STAR dimensions with a coaching note and model rewrite.',
+  },
+  {
+    icon: (
+      <svg width="20" height="20" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M14.25 9.75L16.5 12l-2.25 2.25m-4.5 0L7.5 12l2.25-2.25M6 20.25h12A2.25 2.25 0 0020.25 18V6A2.25 2.25 0 0018 3.75H6A2.25 2.25 0 003.75 6v12A2.25 2.25 0 006 20.25z" />
+      </svg>
+    ),
+    title: 'LeetCode Coach',
+    desc: 'Live interviewer probes your complexity analysis and follow-up thinking.',
+  },
+]
+
+/* ─── Demo carousel data ────────────────────────────────────────────────────── */
 interface DemoSlide {
   mode: string
   question: string
   overall: number
-  bars: { label: string; letter: string; score: number; color: string; track: string }[]
+  bars: { label: string; score: number; color: string }[]
   note: string
   accent: string
-  accentBorder: string
-  accentShadow: string
-  accentText: string
   soon?: boolean
 }
 
@@ -127,39 +132,39 @@ const DEMO_SLIDES: DemoSlide[] = [
     question: 'Tell me about a time you led a team through a difficult project.',
     overall: 4,
     bars: [
-      { label: 'Situation', letter: 'S', score: 4, color: 'bg-rose-400',    track: 'bg-rose-100' },
-      { label: 'Task',      letter: 'T', score: 3, color: 'bg-amber-400',   track: 'bg-amber-100' },
-      { label: 'Action',    letter: 'A', score: 5, color: 'bg-violet-500',  track: 'bg-violet-100' },
-      { label: 'Result',    letter: 'R', score: 4, color: 'bg-emerald-500', track: 'bg-emerald-100' },
+      { label: 'Situation', score: 4, color: '#7c3aed' },
+      { label: 'Task',      score: 3, color: '#06b6d4' },
+      { label: 'Action',    score: 5, color: '#10b981' },
+      { label: 'Result',    score: 4, color: '#f59e0b' },
     ],
     note: 'Strong action section. Quantify your result more specifically — mention the actual metric or timeline to make it land.',
-    accent: 'bg-rose-500', accentBorder: 'border-rose-700', accentShadow: '#9f1239', accentText: 'text-rose-700',
+    accent: '#7c3aed',
   },
   {
     mode: 'Technical',
     question: 'How would you design a URL shortener that handles 100M requests per day?',
     overall: 3,
     bars: [
-      { label: 'Situation', letter: 'S', score: 2, color: 'bg-rose-400',    track: 'bg-rose-100' },
-      { label: 'Task',      letter: 'T', score: 3, color: 'bg-amber-400',   track: 'bg-amber-100' },
-      { label: 'Action',    letter: 'A', score: 4, color: 'bg-violet-500',  track: 'bg-violet-100' },
-      { label: 'Result',    letter: 'R', score: 3, color: 'bg-emerald-500', track: 'bg-emerald-100' },
+      { label: 'Situation', score: 2, color: '#7c3aed' },
+      { label: 'Task',      score: 3, color: '#06b6d4' },
+      { label: 'Action',    score: 4, color: '#10b981' },
+      { label: 'Result',    score: 3, color: '#f59e0b' },
     ],
-    note: "Good coverage of hashing and load balancing. Add discussion of cache eviction strategy and how you'd handle hotspot keys at scale.",
-    accent: 'bg-violet-500', accentBorder: 'border-violet-700', accentShadow: '#4c1d95', accentText: 'text-violet-700',
+    note: "Good coverage of hashing and load balancing. Add cache eviction strategy and hotspot handling to push this to a 4.",
+    accent: '#06b6d4',
   },
   {
-    mode: 'Resume Screening',
+    mode: 'Resume',
     question: 'Walk me through your most impactful project from your resume.',
     overall: 4,
     bars: [
-      { label: 'Situation', letter: 'S', score: 5, color: 'bg-rose-400',    track: 'bg-rose-100' },
-      { label: 'Task',      letter: 'T', score: 4, color: 'bg-amber-400',   track: 'bg-amber-100' },
-      { label: 'Action',    letter: 'A', score: 4, color: 'bg-violet-500',  track: 'bg-violet-100' },
-      { label: 'Result',    letter: 'R', score: 3, color: 'bg-emerald-500', track: 'bg-emerald-100' },
+      { label: 'Situation', score: 5, color: '#7c3aed' },
+      { label: 'Task',      score: 4, color: '#06b6d4' },
+      { label: 'Action',    score: 4, color: '#10b981' },
+      { label: 'Result',    score: 3, color: '#f59e0b' },
     ],
-    note: 'Great context-setting. Your result section needs harder numbers — replace "improved performance" with the actual percentage or user impact.',
-    accent: 'bg-emerald-500', accentBorder: 'border-emerald-700', accentShadow: '#064e3b', accentText: 'text-emerald-700',
+    note: "Great context-setting. Your result needs harder numbers — replace 'improved performance' with the actual percentage or user impact.",
+    accent: '#f59e0b',
   },
   {
     mode: 'LeetCode',
@@ -167,61 +172,21 @@ const DEMO_SLIDES: DemoSlide[] = [
     overall: 0,
     bars: [],
     note: '',
-    accent: 'bg-amber-400', accentBorder: 'border-amber-600', accentShadow: '#92400e', accentText: 'text-amber-700',
+    accent: '#10b981',
     soon: true,
   },
 ]
 
-const TESTIMONIALS = [
-  {
-    name: 'Marcus T.',
-    role: 'Software Engineer',
-    quote: "The STAR breakdown showed me exactly where I was losing interviewers. Got an offer at my dream company after two weeks of practice.",
-    stars: 5,
-    avatarBg: 'bg-rose-400',
-    cardBg: 'bg-yellow-50',
-    border: 'border-yellow-400',
-    shadow: '#fbbf24',
-    initials: 'MT',
-  },
-  {
-    name: 'Priya S.',
-    role: 'Product Manager',
-    quote: "The model rewrites were eye-opening. I could see the gap between what I said and what a strong answer looks like.",
-    stars: 5,
-    avatarBg: 'bg-violet-500',
-    cardBg: 'bg-violet-50',
-    border: 'border-violet-400',
-    shadow: '#a78bfa',
-    initials: 'PS',
-  },
-  {
-    name: 'Jordan K.',
-    role: 'Data Scientist',
-    quote: "Practiced 10 minutes a day for a week. My answers became so much more structured — interviewers actually commented on it.",
-    stars: 5,
-    avatarBg: 'bg-emerald-500',
-    cardBg: 'bg-emerald-50',
-    border: 'border-emerald-400',
-    shadow: '#34d399',
-    initials: 'JK',
-  },
-]
-
-const STATS = [
-  { value: '32+', label: 'Curated questions' },
-  { value: '4', label: 'Interview modes' },
-  { value: 'STAR', label: 'AI scoring method' },
-]
-
-/* ─── Page ───────────────────────────────────────────────────────────────── */
+/* ─── Page ───────────────────────────────────────────────────────────────────── */
 export default function Landing() {
+  const navigate = useNavigate()
+  const { user, signOut } = useAuth()
+  const [hoveredMode, setHoveredMode] = useState<number | null>(null)
   const [demoIdx, setDemoIdx] = useState(0)
   const touchStartX = useRef<number | null>(null)
 
-  function prevDemo() { setDemoIdx((i) => (i - 1 + DEMO_SLIDES.length) % DEMO_SLIDES.length) }
-  function nextDemo() { setDemoIdx((i) => (i + 1) % DEMO_SLIDES.length) }
-
+  function prevDemo() { setDemoIdx(i => (i - 1 + DEMO_SLIDES.length) % DEMO_SLIDES.length) }
+  function nextDemo() { setDemoIdx(i => (i + 1) % DEMO_SLIDES.length) }
   function onTouchStart(e: React.TouchEvent) { touchStartX.current = e.touches[0].clientX }
   function onTouchEnd(e: React.TouchEvent) {
     if (touchStartX.current === null) return
@@ -232,365 +197,680 @@ export default function Landing() {
 
   const slide = DEMO_SLIDES[demoIdx]
 
-  return (
-    <div className="min-h-screen bg-[#FEFCE8] overflow-x-hidden" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
+  function scrollToModes() {
+    document.getElementById('modes')?.scrollIntoView({ behavior: 'smooth' })
+  }
 
-      {/* ── Nav ── */}
-      <nav className="max-w-6xl mx-auto px-6 pt-6 flex items-center justify-between">
-        <span style={{ fontFamily: "'Baloo 2', cursive", fontWeight: 800, fontSize: '1.4rem', color: '#1e1b4b' }}>
-          Star<span style={{ color: '#f97316' }}>board</span>
-        </span>
-        <Clay
-          bg="bg-white"
-          border="border-gray-300"
-          shadow="#d1d5db"
-          className="px-5 py-2 cursor-pointer hover:translate-y-[1px] transition-transform duration-150 opacity-60"
-          style={{ boxShadow: '4px 4px 0px #d1d5db' }}
-        >
-          <span className="text-gray-600 font-bold text-sm">Login</span>
-        </Clay>
+  return (
+    <div
+      style={{
+        minHeight: '100vh',
+        background: '#0c0c0e',
+        color: '#f0f0f0',
+        fontFamily: "'Inter', system-ui, sans-serif",
+        overflowX: 'hidden',
+      }}
+    >
+      {/* ── Navbar ───────────────────────────────────────────────────────────── */}
+      <nav
+        style={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 50,
+          borderBottom: '1px solid #2a2a2e',
+          background: 'rgba(12,12,14,0.85)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+        }}
+      >
+        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 24px', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          {/* Logo */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <StarboardLogo size={26} />
+            <span style={{ fontFamily: "'Space Grotesk', system-ui, sans-serif", fontWeight: 600, fontSize: '1.05rem', color: '#f0f0f0', letterSpacing: '-0.02em' }}>
+              starboard
+            </span>
+          </div>
+
+          {/* Nav links */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 32 }} className="hidden md:flex">
+            {['Features', 'Modes', 'Pricing'].map((label) => (
+              <a
+                key={label}
+                href={`#${label.toLowerCase()}`}
+                style={{ color: '#6b6b7a', fontSize: '0.875rem', fontWeight: 500, textDecoration: 'none', transition: 'color 0.15s' }}
+                onMouseEnter={(e) => ((e.target as HTMLElement).style.color = '#f0f0f0')}
+                onMouseLeave={(e) => ((e.target as HTMLElement).style.color = '#6b6b7a')}
+              >
+                {label}
+              </a>
+            ))}
+          </div>
+
+          {/* Auth CTA */}
+          {user ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <button
+                onClick={() => navigate('/dashboard')}
+                style={{ padding: '7px 16px', borderRadius: 8, border: '1px solid #2a2a2e', background: 'transparent', color: '#a1a1aa', fontSize: '0.85rem', fontWeight: 500, cursor: 'pointer', fontFamily: "'Inter', system-ui, sans-serif", transition: 'all 0.15s' }}
+                onMouseEnter={e => { e.currentTarget.style.color = '#f0f0f0'; e.currentTarget.style.borderColor = '#52525b' }}
+                onMouseLeave={e => { e.currentTarget.style.color = '#a1a1aa'; e.currentTarget.style.borderColor = '#2a2a2e' }}
+              >
+                Dashboard
+              </button>
+              <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(124,58,237,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#a78bfa', fontWeight: 700, fontSize: '0.68rem', fontFamily: "'JetBrains Mono', monospace", cursor: 'pointer' }}
+                onClick={() => navigate('/dashboard')}
+                title={user.email}
+              >
+                {(user.email ?? 'U').slice(0, 2).toUpperCase()}
+              </div>
+              <button
+                onClick={() => signOut().then(() => navigate('/'))}
+                style={{ background: 'none', border: 'none', color: '#52525b', fontSize: '0.8rem', cursor: 'pointer', fontFamily: "'Inter', system-ui, sans-serif", padding: '4px 2px', transition: 'color 0.15s' }}
+                onMouseEnter={e => { e.currentTarget.style.color = '#a1a1aa' }}
+                onMouseLeave={e => { e.currentTarget.style.color = '#52525b' }}
+              >
+                Sign out
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => navigate('/login')}
+              style={{ padding: '7px 18px', borderRadius: 8, border: '1px solid #7c3aed', background: 'transparent', color: '#a78bfa', fontSize: '0.85rem', fontWeight: 500, cursor: 'pointer', transition: 'all 0.15s', fontFamily: "'Inter', system-ui, sans-serif" }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(124,58,237,0.12)'; e.currentTarget.style.color = '#c4b5fd' }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#a78bfa' }}
+            >
+              Sign in
+            </button>
+          )}
+        </div>
       </nav>
 
-      {/* ── Hero ── */}
-      <section className="max-w-6xl mx-auto px-6 pt-16 pb-12 text-center relative">
-        {/* Decorative blobs */}
-        <div className="absolute top-8 left-8 w-20 h-20 rounded-full bg-rose-300 border-[3px] border-rose-500 opacity-70"
-          style={{ boxShadow: '4px 4px 0px #f87171' }} />
-        <div className="absolute top-4 right-12 w-14 h-14 rounded-full bg-sky-300 border-[3px] border-sky-500 opacity-70"
-          style={{ boxShadow: '3px 3px 0px #38bdf8' }} />
-        <div className="absolute bottom-0 left-1/4 w-10 h-10 rounded-full bg-violet-300 border-[2px] border-violet-500 opacity-60"
-          style={{ boxShadow: '3px 3px 0px #a78bfa' }} />
-        <div className="absolute top-20 right-1/4 w-8 h-8 rounded-full bg-emerald-300 border-[2px] border-emerald-500 opacity-60"
-          style={{ boxShadow: '2px 2px 0px #34d399' }} />
+      {/* ── Hero ─────────────────────────────────────────────────────────────── */}
+      <section
+        style={{
+          minHeight: 'calc(100vh - 60px)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center',
+          padding: '80px 24px 60px',
+          position: 'relative',
+          background: 'radial-gradient(ellipse at 50% -10%, rgba(124,58,237,0.18) 0%, transparent 55%), radial-gradient(ellipse at 85% 60%, rgba(6,182,212,0.07) 0%, transparent 45%), #0c0c0e',
+        }}
+      >
+        {/* Subtle grid */}
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            backgroundImage: 'linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px)',
+            backgroundSize: '60px 60px',
+            pointerEvents: 'none',
+          }}
+        />
 
-        <div className="relative z-10">
-          <Clay
-            bg="bg-violet-100"
-            border="border-violet-300"
-            shadow="#c4b5fd"
-            className="inline-block px-4 py-1.5 mb-6"
+        <div style={{ position: 'relative', zIndex: 1, maxWidth: 680 }}>
+          {/* Eyebrow */}
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '5px 14px',
+              border: '1px solid rgba(6,182,212,0.3)',
+              borderRadius: 100,
+              background: 'rgba(6,182,212,0.06)',
+              marginBottom: 32,
+            }}
           >
-            <span className="text-violet-700 text-xs font-bold uppercase tracking-widest">AI-Powered Interview Prep</span>
-          </Clay>
-
-          <h1
-            className="text-5xl md:text-7xl font-extrabold text-gray-900 leading-tight mb-6"
-            style={{ fontFamily: "'Baloo 2', cursive" }}
-          >
-            Ace every{' '}
-            <span className="relative inline-block">
-              <span className="relative z-10 text-orange-500">interview</span>
-              <span className="absolute bottom-1 left-0 right-0 h-4 bg-yellow-300 rounded-full -z-10 border-2 border-yellow-400" />
+            <span style={{ color: '#06b6d4', fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.12em', fontFamily: "'JetBrains Mono', monospace" }}>
+              ◈ AI-POWERED INTERVIEW COACHING
             </span>
-            <br />you walk into.
+          </div>
+
+          {/* Headline */}
+          <h1
+            style={{
+              fontFamily: "'Space Grotesk', system-ui, sans-serif",
+              fontSize: 'clamp(2.8rem, 8vw, 5rem)',
+              fontWeight: 700,
+              lineHeight: 1.05,
+              letterSpacing: '-0.03em',
+              color: '#f0f0f0',
+              margin: '0 0 20px',
+            }}
+          >
+            Ace every<br />
+            <span style={{ color: '#7c3aed' }}>interview.</span>
           </h1>
 
-          <p className="text-gray-600 text-lg md:text-xl max-w-xl mx-auto mb-10 leading-relaxed">
-            Record your answer. Get scored on every part of the STAR method. See a model rewrite. Land the offer.
+          {/* Subline */}
+          <p
+            style={{
+              color: '#6b6b7a',
+              fontSize: '1.05rem',
+              lineHeight: 1.65,
+              maxWidth: 480,
+              margin: '0 auto 40px',
+            }}
+          >
+            Practice with an AI interviewer that listens, challenges, and scores your answers in real time.
           </p>
 
-          <button onClick={scrollToTypes}>
-            <Clay
-              bg="bg-orange-500"
-              border="border-orange-700"
-              shadow="#9a3412"
-              className="inline-block px-10 py-4 cursor-pointer hover:translate-y-[2px] transition-transform duration-150"
-              style={{ boxShadow: '6px 6px 0px #9a3412' }}
+          {/* CTAs */}
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 56 }}>
+            <button
+              onClick={scrollToModes}
+              style={{
+                padding: '13px 28px',
+                borderRadius: 10,
+                border: 'none',
+                background: '#7c3aed',
+                color: '#fff',
+                fontSize: '0.95rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                transition: 'background 0.15s, transform 0.15s',
+                fontFamily: "'Inter', system-ui, sans-serif",
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = '#6d28d9'; e.currentTarget.style.transform = 'translateY(-1px)' }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = '#7c3aed'; e.currentTarget.style.transform = 'translateY(0)' }}
             >
-              <span className="text-white font-extrabold text-lg" style={{ fontFamily: "'Baloo 2', cursive" }}>
-                Start practicing — it's free
-              </span>
-            </Clay>
-          </button>
-          <p className="mt-4 text-gray-400 text-sm">No account needed. Pick your interview type below.</p>
+              Start practicing →
+            </button>
+            <button
+              onClick={() => document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth' })}
+              style={{
+                padding: '13px 28px',
+                borderRadius: 10,
+                border: '1px solid #2a2a2e',
+                background: 'transparent',
+                color: '#a1a1aa',
+                fontSize: '0.95rem',
+                fontWeight: 500,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                transition: 'border-color 0.15s, color 0.15s, transform 0.15s',
+                fontFamily: "'Inter', system-ui, sans-serif",
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#52525b'; e.currentTarget.style.color = '#f0f0f0'; e.currentTarget.style.transform = 'translateY(-1px)' }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#2a2a2e'; e.currentTarget.style.color = '#a1a1aa'; e.currentTarget.style.transform = 'translateY(0)' }}
+            >
+              See how it works
+            </button>
+          </div>
+
+          {/* Stat badges */}
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+            {[
+              { value: '32+', label: 'questions' },
+              { value: '4', label: 'interview modes' },
+              { value: 'STAR', label: 'AI scoring' },
+            ].map((s) => (
+              <div
+                key={s.label}
+                style={{
+                  padding: '7px 16px',
+                  border: '1px solid #2a2a2e',
+                  borderRadius: 8,
+                  background: '#141416',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                }}
+              >
+                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, fontSize: '0.85rem', color: '#f0f0f0' }}>{s.value}</span>
+                <span style={{ fontSize: '0.78rem', color: '#6b6b7a' }}>{s.label}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* ── Stats ── */}
-      <section className="max-w-6xl mx-auto px-6 pb-16">
-        <div className="grid grid-cols-3 gap-4 max-w-lg mx-auto">
-          {STATS.map((s) => (
-            <Clay key={s.label} bg="bg-white" border="border-gray-300" shadow="#d1d5db" className="p-4 text-center">
-              <div className="text-2xl font-extrabold text-gray-900" style={{ fontFamily: "'Baloo 2', cursive" }}>{s.value}</div>
-              <div className="text-xs text-gray-500 font-medium mt-0.5">{s.label}</div>
-            </Clay>
+      {/* ── Mode Gallery ─────────────────────────────────────────────────────── */}
+      <section id="modes" style={{ padding: '100px 24px', maxWidth: 1100, margin: '0 auto' }}>
+        {/* Section header */}
+        <div style={{ marginBottom: 48 }}>
+          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.7rem', letterSpacing: '0.14em', color: '#6b6b7a', marginBottom: 10 }}>
+            INTERVIEW MODES
+          </p>
+          <h2 style={{ fontFamily: "'Space Grotesk', system-ui, sans-serif", fontSize: 'clamp(1.8rem, 4vw, 2.5rem)', fontWeight: 700, letterSpacing: '-0.025em', color: '#f0f0f0', margin: 0 }}>
+            Every format that stands between<br />you and the offer.
+          </h2>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>
+          {MODES.map((mode, i) => (
+            <Link
+              key={mode.title}
+              to={mode.href}
+              style={{ textDecoration: 'none' }}
+              onMouseEnter={() => setHoveredMode(i)}
+              onMouseLeave={() => setHoveredMode(null)}
+            >
+              <div
+                style={{
+                  padding: '28px 24px',
+                  borderRadius: 14,
+                  border: `1px solid ${hoveredMode === i ? mode.accentBorder : '#2a2a2e'}`,
+                  background: hoveredMode === i ? mode.accentBg : '#141416',
+                  boxShadow: hoveredMode === i ? `0 0 28px ${mode.accentGlow}` : 'none',
+                  transition: 'all 0.2s ease',
+                  cursor: 'pointer',
+                  height: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 12,
+                }}
+              >
+                {/* Icon */}
+                <div
+                  style={{
+                    width: 38,
+                    height: 38,
+                    borderRadius: 10,
+                    border: `1px solid ${mode.accentBorder}`,
+                    background: mode.accentBg,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: mode.accent,
+                  }}
+                >
+                  {mode.icon}
+                </div>
+
+                <div style={{ flex: 1 }}>
+                  <h3 style={{ fontFamily: "'Space Grotesk', system-ui, sans-serif", fontWeight: 600, fontSize: '1rem', color: '#f0f0f0', margin: '0 0 6px' }}>
+                    {mode.title}
+                  </h3>
+                  <p style={{ fontSize: '0.85rem', color: '#6b6b7a', lineHeight: 1.55, margin: 0 }}>
+                    {mode.desc}
+                  </p>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.72rem', color: mode.accent }}>
+                    {mode.count}
+                  </span>
+                  <svg width="14" height="14" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke={hoveredMode === i ? mode.accent : '#52525b'} style={{ transition: 'stroke 0.2s, transform 0.2s', transform: hoveredMode === i ? 'translateX(2px)' : 'none' }}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                  </svg>
+                </div>
+              </div>
+            </Link>
           ))}
         </div>
       </section>
 
-      {/* ── Course catalog ── */}
-      <section id="interview-types" className="bg-white py-20 scroll-mt-6">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-extrabold text-gray-900 mb-3" style={{ fontFamily: "'Baloo 2', cursive" }}>
-              Pick your interview type
-            </h2>
-            <p className="text-gray-500 text-base max-w-md mx-auto">Four modes. One platform. Every format that stands between you and your next offer.</p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {COURSES.map((c) => (
-              <Link key={c.title} to={c.href} className="block group">
-                <Clay bg={c.bg} border={c.border} shadow={c.shadow}
-                  className="p-6 relative cursor-pointer h-full group-hover:translate-y-[2px] transition-transform duration-150"
-                  style={{ boxShadow: '5px 5px 0px ' + c.shadow }}>
-                  {c.soon && (
-                    <Clay bg="bg-amber-400" border="border-amber-600" shadow="#b45309"
-                      className="absolute -top-3 -right-3 px-2 py-0.5">
-                      <span className="text-white text-xs font-bold">Soon</span>
-                    </Clay>
-                  )}
-                  <div className={`w-10 h-10 rounded-2xl ${c.iconBg} border-2 border-white flex items-center justify-center mb-4`}
-                    style={{ boxShadow: '2px 2px 0px rgba(0,0,0,0.15)' }}>
-                    {c.icon}
-                  </div>
-                  <h3 className="font-extrabold text-gray-900 mb-1.5" style={{ fontFamily: "'Baloo 2', cursive", fontSize: '1.1rem' }}>
-                    {c.title}
+      {/* ── Features ─────────────────────────────────────────────────────────── */}
+      <section id="features" style={{ padding: '80px 24px', borderTop: '1px solid #1c1c1f', borderBottom: '1px solid #1c1c1f', background: '#0f0f11' }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 40 }}>
+            {FEATURES.map((f) => (
+              <div key={f.title} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <div
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 12,
+                    border: '1px solid #2a2a2e',
+                    background: '#141416',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#7c3aed',
+                  }}
+                >
+                  {f.icon}
+                </div>
+                <div>
+                  <h3 style={{ fontFamily: "'Space Grotesk', system-ui, sans-serif", fontWeight: 600, fontSize: '1.05rem', color: '#f0f0f0', margin: '0 0 6px' }}>
+                    {f.title}
                   </h3>
-                  <p className="text-gray-600 text-sm leading-relaxed mb-4">{c.desc}</p>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5">
-                      <svg className="w-3.5 h-3.5 text-gray-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V19.5a2.25 2.25 0 002.25 2.25h.75" />
-                      </svg>
-                      <span className="text-xs font-semibold text-gray-500">{c.count}</span>
-                    </div>
-                    {!c.soon && (
-                      <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                      </svg>
-                    )}
-                  </div>
-                </Clay>
-              </Link>
+                  <p style={{ fontSize: '0.875rem', color: '#6b6b7a', lineHeight: 1.6, margin: 0 }}>
+                    {f.desc}
+                  </p>
+                </div>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── Progress tracking demo ── */}
-      <section className="bg-[#FEFCE8] py-20">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <Clay bg="bg-emerald-100" border="border-emerald-300" shadow="#6ee7b7" className="inline-block px-3 py-1 mb-5">
-                <span className="text-emerald-700 text-xs font-bold uppercase tracking-widest">Live AI Scoring</span>
-              </Clay>
-              <h2 className="text-4xl font-extrabold text-gray-900 mb-5 leading-tight" style={{ fontFamily: "'Baloo 2', cursive" }}>
-                See exactly where<br />you need to improve.
-              </h2>
-              <p className="text-gray-600 text-base leading-relaxed mb-6">
-                Every answer is scored across all four STAR dimensions. You see the number, the coaching note, and a model rewrite for each section — not just generic feedback.
+      {/* ── Demo Carousel ────────────────────────────────────────────────────── */}
+      <section id="demo" style={{ padding: '100px 24px', maxWidth: 900, margin: '0 auto' }}>
+        <div style={{ marginBottom: 48 }}>
+          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.7rem', letterSpacing: '0.14em', color: '#6b6b7a', marginBottom: 10 }}>
+            LIVE PREVIEW
+          </p>
+          <h2 style={{ fontFamily: "'Space Grotesk', system-ui, sans-serif", fontSize: 'clamp(1.8rem, 4vw, 2.5rem)', fontWeight: 700, letterSpacing: '-0.025em', color: '#f0f0f0', margin: 0 }}>
+            See exactly how you're scored,<br />in real time.
+          </h2>
+        </div>
+
+        <div
+          style={{ border: '1px solid #2a2a2e', borderRadius: 16, background: '#141416', overflow: 'hidden', userSelect: 'none' }}
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
+        >
+          {/* Mode tabs */}
+          <div style={{ padding: '16px 20px', borderBottom: '1px solid #2a2a2e', display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {DEMO_SLIDES.map((s, i) => (
+              <button
+                key={s.mode}
+                onClick={() => setDemoIdx(i)}
+                style={{
+                  padding: '5px 14px',
+                  borderRadius: 100,
+                  border: `1px solid ${i === demoIdx ? s.accent : '#2a2a2e'}`,
+                  background: i === demoIdx ? `rgba(${s.accent === '#7c3aed' ? '124,58,237' : s.accent === '#06b6d4' ? '6,182,212' : s.accent === '#f59e0b' ? '245,158,11' : '16,185,129'},0.15)` : 'transparent',
+                  color: i === demoIdx ? s.accent : '#52525b',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s',
+                  fontFamily: "'Inter', system-ui, sans-serif",
+                }}
+              >
+                {s.mode}
+              </button>
+            ))}
+          </div>
+
+          <div style={{ padding: '24px' }}>
+            {/* Question */}
+            <div style={{ padding: '12px 16px', border: '1px solid #2a2a2e', borderRadius: 8, background: '#1c1c1f', marginBottom: 20 }}>
+              <p style={{ fontSize: '0.85rem', color: '#a1a1aa', fontStyle: 'italic', margin: 0, lineHeight: 1.5 }}>
+                "{slide.question}"
               </p>
-              <ul className="space-y-3">
-                {['Instant scoring after each answer', 'Per-section model rewrites', 'Coaching notes from AI'].map((item) => (
-                  <li key={item} className="flex items-center gap-3">
-                    <Clay bg="bg-emerald-400" border="border-emerald-600" shadow="#059669" className="w-6 h-6 flex items-center justify-center shrink-0">
-                      <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                      </svg>
-                    </Clay>
-                    <span className="text-gray-700 font-medium text-sm">{item}</span>
-                  </li>
-                ))}
-              </ul>
             </div>
 
-            {/* Demo carousel */}
-            <div
-              className="select-none"
-              onTouchStart={onTouchStart}
-              onTouchEnd={onTouchEnd}
-            >
-              <Clay bg="bg-white" border="border-gray-300" shadow="#d1d5db" className="p-7">
-                {/* Mode tabs */}
-                <div className="flex gap-2 flex-wrap mb-5">
-                  {DEMO_SLIDES.map((s, i) => (
-                    <button
-                      key={s.mode}
-                      onClick={() => setDemoIdx(i)}
-                      className={`px-3 py-1 rounded-full text-xs font-bold border-2 transition-all duration-150 cursor-pointer ${
-                        i === demoIdx
-                          ? `${s.accent} ${s.accentBorder} text-white`
-                          : 'bg-gray-100 border-gray-200 text-gray-500 hover:bg-gray-200'
-                      }`}
-                    >
-                      {s.mode}
-                    </button>
+            {slide.soon ? (
+              /* LeetCode coming soon */
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '40px 0', gap: 12 }}>
+                <div style={{
+                  padding: '8px 20px', borderRadius: 8,
+                  border: '1px solid rgba(16,185,129,0.3)', background: 'rgba(16,185,129,0.08)',
+                  color: '#10b981', fontFamily: "'JetBrains Mono', monospace", fontSize: '0.8rem', fontWeight: 700,
+                }}>
+                  LIVE NOW
+                </div>
+                <p style={{ color: '#6b6b7a', fontSize: '0.875rem', textAlign: 'center', maxWidth: 240, margin: 0 }}>
+                  LeetCode mode with live AI voice interviewer is available. Try it →
+                </p>
+                <button
+                  onClick={() => navigate('/practice/leetcode')}
+                  style={{
+                    marginTop: 4, padding: '8px 20px', borderRadius: 8,
+                    border: '1px solid #10b981', background: 'transparent',
+                    color: '#34d399', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer',
+                    fontFamily: "'Inter', system-ui, sans-serif",
+                  }}
+                >
+                  Open LeetCode →
+                </button>
+              </div>
+            ) : (
+              <>
+                {/* Header row — overall score */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+                  <div>
+                    <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.65rem', letterSpacing: '0.1em', color: '#52525b', marginBottom: 4 }}>
+                      AI FEEDBACK · STAR SCORE
+                    </p>
+                    <p style={{ fontFamily: "'Space Grotesk', system-ui, sans-serif", fontWeight: 600, fontSize: '1rem', color: '#f0f0f0', margin: 0 }}>
+                      {slide.mode} Interview
+                    </p>
+                  </div>
+                  <div style={{
+                    width: 56, height: 56, borderRadius: 12, flexShrink: 0,
+                    border: `1px solid ${slide.accent}40`,
+                    background: `rgba(${slide.accent === '#7c3aed' ? '124,58,237' : slide.accent === '#06b6d4' ? '6,182,212' : slide.accent === '#f59e0b' ? '245,158,11' : '16,185,129'},0.1)`,
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <span style={{ fontFamily: "'Space Grotesk', system-ui, sans-serif", fontWeight: 700, fontSize: '1.6rem', color: '#f0f0f0', lineHeight: 1 }}>{slide.overall}</span>
+                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.6rem', color: '#52525b', marginTop: 2 }}>/5</span>
+                  </div>
+                </div>
+
+                {/* STAR bars */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 20 }}>
+                  {slide.bars.map(bar => (
+                    <div key={bar.label} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div style={{
+                        width: 26, height: 26, borderRadius: 6, flexShrink: 0,
+                        background: bar.color, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}>
+                        <span style={{ color: '#fff', fontSize: '0.65rem', fontWeight: 700, fontFamily: "'JetBrains Mono', monospace" }}>
+                          {bar.label[0]}
+                        </span>
+                      </div>
+                      <span style={{ width: 68, flexShrink: 0, fontSize: '0.82rem', color: '#a1a1aa', fontWeight: 500 }}>{bar.label}</span>
+                      <div style={{ flex: 1, height: 5, background: '#1c1c1f', borderRadius: 3, overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: `${(bar.score / 5) * 100}%`, background: bar.color, borderRadius: 3, transition: 'width 0.5s ease-out' }} />
+                      </div>
+                      <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.78rem', color: bar.color, fontWeight: 700, flexShrink: 0 }}>{bar.score}</span>
+                    </div>
                   ))}
                 </div>
 
-                {/* Question chip */}
-                <Clay bg="bg-gray-50" border="border-gray-200" shadow="#e5e7eb" className="px-3 py-2 mb-5">
-                  <p className="text-xs text-gray-500 italic leading-snug">"{slide.question}"</p>
-                </Clay>
-
-                {slide.soon ? (
-                  /* Coming soon state */
-                  <div className="flex flex-col items-center justify-center py-10 gap-4">
-                    <Clay bg="bg-amber-100" border="border-amber-400" shadow="#fbbf24" className="px-5 py-2">
-                      <span className="text-amber-700 font-extrabold text-sm" style={{ fontFamily: "'Baloo 2', cursive" }}>Coming Soon</span>
-                    </Clay>
-                    <p className="text-gray-400 text-sm text-center max-w-[200px]">LeetCode verbal coaching is in the works. Stay tuned!</p>
-                  </div>
-                ) : (
-                  <>
-                    {/* Header row */}
-                    <div className="flex items-center justify-between mb-5">
-                      <div>
-                        <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-0.5">AI Feedback</p>
-                        <p className="font-extrabold text-gray-900 text-lg" style={{ fontFamily: "'Baloo 2', cursive" }}>STAR Score</p>
-                      </div>
-                      <Clay bg={slide.accent} border={slide.accentBorder} shadow={slide.accentShadow} className="w-14 h-14 flex flex-col items-center justify-center">
-                        <span className="text-white font-extrabold text-2xl leading-none" style={{ fontFamily: "'Baloo 2', cursive" }}>{slide.overall}</span>
-                        <span className="text-white/70 text-xs font-semibold">/ 5</span>
-                      </Clay>
-                    </div>
-
-                    {/* Bars */}
-                    <div className="space-y-4 mb-5">
-                      {slide.bars.map(({ label, letter, score, color, track }) => (
-                        <div key={label} className="flex items-center gap-3">
-                          <Clay bg={color} border="border-transparent" shadow="rgba(0,0,0,0.15)"
-                            className="w-7 h-7 flex items-center justify-center shrink-0"
-                            style={{ boxShadow: '2px 2px 0px rgba(0,0,0,0.2)' }}>
-                            <span className="text-white text-xs font-extrabold">{letter}</span>
-                          </Clay>
-                          <span className="w-16 shrink-0 text-sm font-semibold text-gray-700">{label}</span>
-                          <div className={`flex-1 h-4 rounded-full ${track} border-2 border-gray-200 overflow-hidden`}>
-                            <div
-                              className={`h-full rounded-full ${color} border-r-2 border-white transition-all duration-500`}
-                              style={{ width: `${(score / 5) * 100}%` }}
-                            />
-                          </div>
-                          <span className="text-sm font-extrabold text-gray-700 w-6 text-right">{score}</span>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Coaching note */}
-                    <Clay bg="bg-yellow-50" border="border-yellow-300" shadow="#fbbf24" className="p-4">
-                      <p className="text-xs font-bold uppercase tracking-wide text-yellow-700 mb-1.5">Coaching note</p>
-                      <p className="text-gray-700 text-sm leading-relaxed">{slide.note}</p>
-                    </Clay>
-                  </>
-                )}
-
-                {/* Prev / Next + dots */}
-                <div className="flex items-center justify-between mt-5">
-                  <button
-                    onClick={prevDemo}
-                    className="w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors duration-150"
-                    aria-label="Previous mode"
-                  >
-                    <svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-                    </svg>
-                  </button>
-                  <div className="flex gap-2">
-                    {DEMO_SLIDES.map((s, i) => (
-                      <button
-                        key={i}
-                        onClick={() => setDemoIdx(i)}
-                        className={`rounded-full border-2 transition-all duration-150 cursor-pointer ${
-                          i === demoIdx
-                            ? `w-5 h-3 ${s.accent} ${s.accentBorder}`
-                            : 'w-3 h-3 bg-gray-200 border-gray-300'
-                        }`}
-                        aria-label={`Go to ${s.mode}`}
-                      />
-                    ))}
-                  </div>
-                  <button
-                    onClick={nextDemo}
-                    className="w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors duration-150"
-                    aria-label="Next mode"
-                  >
-                    <svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                    </svg>
-                  </button>
+                {/* Coaching note */}
+                <div style={{
+                  padding: '12px 16px', borderRadius: 8,
+                  border: `1px solid ${slide.accent}30`,
+                  background: `rgba(${slide.accent === '#7c3aed' ? '124,58,237' : slide.accent === '#06b6d4' ? '6,182,212' : slide.accent === '#f59e0b' ? '245,158,11' : '16,185,129'},0.05)`,
+                }}>
+                  <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.65rem', letterSpacing: '0.1em', color: slide.accent, marginBottom: 6 }}>
+                    COACHING NOTE
+                  </p>
+                  <p style={{ fontSize: '0.82rem', color: '#a1a1aa', lineHeight: 1.55, margin: 0 }}>{slide.note}</p>
                 </div>
-              </Clay>
+              </>
+            )}
+
+            {/* Prev / Next + dots */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 20 }}>
+              <button
+                onClick={prevDemo}
+                aria-label="Previous"
+                style={{
+                  width: 32, height: 32, borderRadius: '50%',
+                  border: '1px solid #2a2a2e', background: 'transparent',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer', color: '#6b6b7a', transition: 'border-color 0.15s, color 0.15s',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#52525b'; e.currentTarget.style.color = '#f0f0f0' }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#2a2a2e'; e.currentTarget.style.color = '#6b6b7a' }}
+              >
+                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                </svg>
+              </button>
+
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                {DEMO_SLIDES.map((s, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setDemoIdx(i)}
+                    aria-label={`Go to ${s.mode}`}
+                    style={{
+                      borderRadius: 100,
+                      border: 'none',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s',
+                      width: i === demoIdx ? 20 : 8,
+                      height: 8,
+                      background: i === demoIdx ? s.accent : '#2a2a2e',
+                    }}
+                  />
+                ))}
+              </div>
+
+              <button
+                onClick={nextDemo}
+                aria-label="Next"
+                style={{
+                  width: 32, height: 32, borderRadius: '50%',
+                  border: '1px solid #2a2a2e', background: 'transparent',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer', color: '#6b6b7a', transition: 'border-color 0.15s, color 0.15s',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#52525b'; e.currentTarget.style.color = '#f0f0f0' }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#2a2a2e'; e.currentTarget.style.color = '#6b6b7a' }}
+              >
+                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                </svg>
+              </button>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── Testimonials ── */}
-      <section className="bg-white py-20">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-extrabold text-gray-900 mb-3" style={{ fontFamily: "'Baloo 2', cursive" }}>
-              From the people who got the job
-            </h2>
-            <p className="text-gray-500 text-base">Real feedback from real interview prep.</p>
+      {/* ── Founder Story ────────────────────────────────────────────────────── */}
+      <section style={{ background: '#0f0f11', borderTop: '1px solid #1c1c1f', borderBottom: '1px solid #1c1c1f', padding: '80px 24px' }}>
+        <div style={{ maxWidth: 700, margin: '0 auto' }}>
+          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.68rem', letterSpacing: '0.14em', color: '#52525b', marginBottom: 24 }}>
+            FOUNDER STORY
+          </p>
+
+          {/* Decorative quote mark */}
+          <div style={{ fontFamily: "'Space Grotesk', system-ui, sans-serif", fontSize: '4.5rem', lineHeight: 1, color: 'rgba(124,58,237,0.22)', marginBottom: 8, userSelect: 'none' }}>
+            "
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {TESTIMONIALS.map((t) => (
-              <Clay key={t.name} bg={t.cardBg} border={t.border} shadow={t.shadow} className="p-7">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className={`w-11 h-11 rounded-2xl ${t.avatarBg} border-2 border-white flex items-center justify-center`}
-                    style={{ boxShadow: '2px 2px 0px rgba(0,0,0,0.15)' }}>
-                    <span className="text-white font-extrabold text-sm">{t.initials}</span>
-                  </div>
-                  <div>
-                    <p className="font-extrabold text-gray-900 text-sm" style={{ fontFamily: "'Baloo 2', cursive" }}>{t.name}</p>
-                    <p className="text-xs text-gray-500 font-medium">{t.role}</p>
-                  </div>
-                </div>
-                <Stars n={t.stars} />
-                <p className="text-gray-700 text-sm leading-relaxed mt-3">"{t.quote}"</p>
-              </Clay>
+          {/* Quote body */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 32 }}>
+            <p style={{ fontSize: '1rem', color: '#a1a1aa', lineHeight: 1.75, margin: 0 }}>
+              I walked into a full-loop interview thinking I was ready. I'd ground out LeetCode problems, re-read my resume, rehearsed answers in my head. Then the first behavioral question hit — <em style={{ color: '#d4d4d8' }}>"Tell me about a time you showed leadership"</em> — and I just... rambled. No structure. No impact. I knew the material. I just couldn't deliver it under pressure.
+            </p>
+            <p style={{ fontSize: '1rem', color: '#a1a1aa', lineHeight: 1.75, margin: 0 }}>
+              After that humbling experience I researched everything I could about what actually works. The answer was always the same: mock interviews. Real, timed, out-loud reps with someone who gives you hard feedback. But everyone I knew was too busy, and the platforms that offered mock sessions felt awkward, expensive, and impossible to schedule.
+            </p>
+            <p style={{ fontSize: '1rem', color: '#a1a1aa', lineHeight: 1.75, margin: 0 }}>
+              So I built Starboard — the AI interviewer I wish I'd had. Now I practice out loud, get scored on the STAR framework after every answer, and know exactly what to fix before the next interview. No scheduling. No awkwardness.{' '}
+              <span style={{ color: '#f0f0f0', fontWeight: 500 }}>Just reps that build real confidence.</span>
+            </p>
+          </div>
+
+          {/* Divider */}
+          <div style={{ height: 1, background: '#2a2a2e', marginBottom: 24 }} />
+
+          {/* Attribution */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <div style={{
+              width: 44, height: 44, borderRadius: '50%', flexShrink: 0,
+              background: 'rgba(124,58,237,0.15)',
+              border: '1px solid rgba(124,58,237,0.4)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <span style={{ fontFamily: "'Space Grotesk', system-ui, sans-serif", fontWeight: 700, fontSize: '0.82rem', color: '#a78bfa' }}>AP</span>
+            </div>
+            <div>
+              <p style={{ fontFamily: "'Space Grotesk', system-ui, sans-serif", fontWeight: 600, fontSize: '0.95rem', color: '#f0f0f0', margin: '0 0 2px' }}>
+                Andrew Pham
+              </p>
+              <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.7rem', letterSpacing: '0.08em', color: '#52525b', margin: 0 }}>
+                SOFTWARE ENGINEER · FOUNDER OF STARBOARD
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── CTA ──────────────────────────────────────────────────────────────── */}
+      <section
+        style={{
+          padding: '100px 24px',
+          textAlign: 'center',
+          background: 'radial-gradient(ellipse at 50% 100%, rgba(124,58,237,0.12) 0%, transparent 60%), #0c0c0e',
+          borderTop: '1px solid #1c1c1f',
+        }}
+      >
+        <div style={{ maxWidth: 520, margin: '0 auto' }}>
+          <h2
+            style={{
+              fontFamily: "'Space Grotesk', system-ui, sans-serif",
+              fontSize: 'clamp(2rem, 5vw, 3rem)',
+              fontWeight: 700,
+              letterSpacing: '-0.03em',
+              color: '#f0f0f0',
+              marginBottom: 16,
+            }}
+          >
+            Ready to practice?
+          </h2>
+          <p style={{ color: '#6b6b7a', fontSize: '1rem', marginBottom: 36 }}>
+            Pick a question, speak your answer, get instant AI feedback — free, no signup.
+          </p>
+          <button
+            onClick={() => navigate('/practice/behavioral')}
+            style={{
+              padding: '15px 36px',
+              borderRadius: 12,
+              border: 'none',
+              background: '#7c3aed',
+              color: '#fff',
+              fontSize: '1rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+              transition: 'background 0.15s, transform 0.15s',
+              fontFamily: "'Inter', system-ui, sans-serif",
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = '#6d28d9'; e.currentTarget.style.transform = 'translateY(-2px)' }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = '#7c3aed'; e.currentTarget.style.transform = 'translateY(0)' }}
+          >
+            Start free →
+          </button>
+          <p style={{ fontSize: '0.8rem', color: '#3f3f46', marginTop: 16 }}>
+            Join 1,000+ candidates practicing with Starboard
+          </p>
+        </div>
+      </section>
+
+      {/* ── Footer ───────────────────────────────────────────────────────────── */}
+      <footer style={{ borderTop: '1px solid #1c1c1f', padding: '28px 24px' }}>
+        <div
+          style={{
+            maxWidth: 1100,
+            margin: '0 auto',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: 16,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <StarboardLogo size={20} />
+            <span style={{ fontFamily: "'Space Grotesk', system-ui, sans-serif", fontWeight: 600, fontSize: '0.9rem', color: '#52525b' }}>
+              starboard
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
+            {['Privacy', 'Terms', 'GitHub'].map((link) => (
+              <a
+                key={link}
+                href="#"
+                style={{ fontSize: '0.8rem', color: '#3f3f46', textDecoration: 'none', transition: 'color 0.15s' }}
+                onMouseEnter={(e) => ((e.target as HTMLElement).style.color = '#6b6b7a')}
+                onMouseLeave={(e) => ((e.target as HTMLElement).style.color = '#3f3f46')}
+              >
+                {link}
+              </a>
             ))}
           </div>
+
+          <span style={{ fontSize: '0.78rem', color: '#3f3f46' }}>© 2026 Starboard</span>
         </div>
-      </section>
-
-      {/* ── CTA ── */}
-      <section className="py-20 bg-[#FEFCE8]">
-        <div className="max-w-2xl mx-auto px-6 text-center">
-          <Clay bg="bg-orange-100" border="border-orange-300" shadow="#fb923c" className="p-12">
-            {/* Decorative dots */}
-            <div className="flex justify-center gap-2 mb-6">
-              {['bg-rose-400', 'bg-violet-400', 'bg-emerald-400', 'bg-sky-400', 'bg-amber-400'].map((c, i) => (
-                <div key={i} className={`w-3 h-3 rounded-full ${c}`} />
-              ))}
-            </div>
-
-            <h2 className="text-4xl font-extrabold text-gray-900 mb-4 leading-tight" style={{ fontFamily: "'Baloo 2', cursive" }}>
-              Ready to land your<br />next offer?
-            </h2>
-            <p className="text-gray-600 text-base mb-8 max-w-sm mx-auto leading-relaxed">
-              Pick a question, record your answer, and get instant AI feedback — right now, no signup.
-            </p>
-
-            <button onClick={scrollToTypes}>
-              <Clay
-                bg="bg-orange-500"
-                border="border-orange-700"
-                shadow="#9a3412"
-                className="inline-block px-10 py-4 cursor-pointer hover:translate-y-[2px] transition-transform duration-150"
-                style={{ boxShadow: '6px 6px 0px #9a3412' }}
-              >
-                <span className="text-white font-extrabold text-lg" style={{ fontFamily: "'Baloo 2', cursive" }}>
-                  Choose your interview type
-                </span>
-              </Clay>
-            </button>
-
-            <p className="mt-5 text-gray-400 text-sm">Free forever. No credit card. Just practice.</p>
-          </Clay>
-        </div>
-      </section>
-
-      {/* ── Footer ── */}
-      <footer className="border-t-[3px] border-gray-200 py-8 text-center bg-white">
-        <span className="font-extrabold text-gray-800" style={{ fontFamily: "'Baloo 2', cursive" }}>
-          Star<span className="text-orange-500">board</span>
-        </span>
-        <span className="text-gray-400 text-sm ml-3">— built to get you the job.</span>
       </footer>
     </div>
   )

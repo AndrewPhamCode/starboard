@@ -1,5 +1,7 @@
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { supabase } from '../lib/supabase'
+import { API_URL } from '../lib/api'
 import Editor from '@monaco-editor/react'
 import LeetCodeScoreCard, { type LeetCodeScore } from '../components/LeetCodeScoreCard'
 
@@ -57,12 +59,70 @@ function stopAudio() {
 async function speak(text: string, onEnd: () => void) {
   stopAudio()
   try {
-    const res = await fetch('/api/tts', {
+    const res = await fetch(`${API_URL}/api/tts`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text }),
     })
     if (!res.ok) throw new Error('TTS failed')
+
+    // MediaSource streaming: start playing as chunks arrive (Chrome/Firefox)
+    if (typeof MediaSource !== 'undefined' && MediaSource.isTypeSupported('audio/mpeg') && res.body) {
+      await new Promise<void>((resolve) => {
+        const ms = new MediaSource()
+        const objUrl = URL.createObjectURL(ms)
+        const audio = new Audio(objUrl)
+        activeAudio = audio
+
+        let settled = false
+        const finish = () => {
+          if (settled) return
+          settled = true
+          URL.revokeObjectURL(objUrl)
+          activeAudio = null
+          onEnd()
+          resolve()
+        }
+        audio.onended = finish
+        audio.onerror = finish
+
+        ms.addEventListener('sourceopen', async () => {
+          let sb: SourceBuffer
+          try { sb = ms.addSourceBuffer('audio/mpeg') }
+          catch { finish(); return }
+
+          let playStarted = false
+          const tryPlay = () => {
+            if (!playStarted) { playStarted = true; audio.play().catch(() => {}) }
+          }
+          audio.addEventListener('canplay', tryPlay, { once: true })
+
+          const reader = res.body!.getReader()
+          try {
+            for (;;) {
+              const { done, value } = await reader.read()
+              if (done) {
+                if (ms.readyState === 'open') ms.endOfStream()
+                tryPlay()
+                break
+              }
+              await new Promise<void>((ok, fail) => {
+                sb.addEventListener('updateend', () => ok(), { once: true })
+                sb.addEventListener('error', fail, { once: true })
+                try { sb.appendBuffer(value) } catch (e) { fail(e) }
+              })
+              tryPlay()
+            }
+          } catch {
+            if (ms.readyState === 'open') ms.endOfStream()
+            finish()
+          }
+        })
+      })
+      return
+    }
+
+    // Fallback: collect full blob then play (Safari)
     const blob = await res.blob()
     const url = URL.createObjectURL(blob)
     const audio = new Audio(url)
@@ -105,7 +165,7 @@ function useRecorder() {
   function stopRecording(): Promise<{ blob: Blob; duration: number }> {
     return new Promise((resolve) => {
       const mr = mediaRecorderRef.current
-      if (!mr) { resolve({ blob: new Blob(), duration: 0 }); return }
+      if (!mr || mr.state === 'inactive') { resolve({ blob: new Blob(), duration: 0 }); return }
       const duration = (Date.now() - startTimeRef.current) / 1000
       mr.onstop = () => {
         resolve({ blob: new Blob(chunksRef.current, { type: 'audio/webm' }), duration })
@@ -119,7 +179,11 @@ function useRecorder() {
     cachedStreamRef.current = null
   }
 
-  return { acquireMic, startRecording, stopRecording, releaseMic }
+  function getStream(): MediaStream | null {
+    return cachedStreamRef.current
+  }
+
+  return { acquireMic, startRecording, stopRecording, releaseMic, getStream }
 }
 
 /* ─── Live caption (reused from InterviewSession) ───────────────────────── */
@@ -176,6 +240,107 @@ function useLiveCaption(active: boolean) {
   return caption
 }
 
+/* ─── Voice meter ────────────────────────────────────────────────────────── */
+interface VoiceMeterOptions {
+  onSilenceAfterSpeech?: () => void
+  silenceThreshold?: number
+  silenceDurationMs?: number
+}
+
+function useVoiceMeter(
+  active: boolean,
+  getStream: () => MediaStream | null,
+  options?: VoiceMeterOptions,
+): number {
+  const [volume, setVolume] = useState(0)
+  const rafRef = useRef<number | null>(null)
+  const ctxRef = useRef<AudioContext | null>(null)
+  const callbackRef = useRef<(() => void) | undefined>(undefined)
+  const hasSpokeRef = useRef(false)
+  const silenceStartRef = useRef<number | null>(null)
+
+  callbackRef.current = options?.onSilenceAfterSpeech
+
+  useEffect(() => {
+    if (!active) {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current)
+      ctxRef.current?.close()
+      ctxRef.current = null
+      hasSpokeRef.current = false
+      silenceStartRef.current = null
+      setVolume(0)
+      return
+    }
+    hasSpokeRef.current = false
+    silenceStartRef.current = null
+    const stream = getStream()
+    if (!stream) return
+    const ctx = new AudioContext()
+    const analyser = ctx.createAnalyser()
+    analyser.fftSize = 256
+    ctx.createMediaStreamSource(stream).connect(analyser)
+    ctxRef.current = ctx
+    const data = new Uint8Array(analyser.frequencyBinCount)
+    function tick() {
+      analyser.getByteTimeDomainData(data)
+      let sum = 0
+      for (let i = 0; i < data.length; i++) {
+        const v = (data[i] - 128) / 128
+        sum += v * v
+      }
+      const rms = Math.min(1, Math.sqrt(sum / data.length) * 6)
+      setVolume(rms)
+
+      const threshold = options?.silenceThreshold ?? 0.08
+      const durationMs = options?.silenceDurationMs ?? 1800
+      if (rms >= threshold) {
+        hasSpokeRef.current = true
+        silenceStartRef.current = null
+      } else if (hasSpokeRef.current) {
+        if (silenceStartRef.current === null) {
+          silenceStartRef.current = performance.now()
+        } else if (performance.now() - silenceStartRef.current >= durationMs) {
+          hasSpokeRef.current = false
+          silenceStartRef.current = null
+          callbackRef.current?.()
+        }
+      }
+
+      rafRef.current = requestAnimationFrame(tick)
+    }
+    tick()
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current)
+      ctx.close()
+      ctxRef.current = null
+    }
+  }, [active])
+
+  return volume
+}
+
+const BAR_WEIGHTS = [0.5, 0.75, 0.9, 1.0, 0.95, 0.85, 0.7, 0.55]
+
+function VoiceMeter({ volume }: { volume: number }) {
+  return (
+    <div className="flex items-center gap-[3px]" style={{ height: 24 }}>
+      {BAR_WEIGHTS.map((w, i) => {
+        const h = Math.max(4, Math.round(volume * 24 * w))
+        return (
+          <div
+            key={i}
+            className="w-[3px] rounded-full transition-all duration-75"
+            style={{
+              height: h,
+              background: volume > 0.15 ? '#22c55e' : '#d1d5db',
+            }}
+          />
+        )
+      })}
+    </div>
+  )
+}
+
 /* ─── Difficulty badge ───────────────────────────────────────────────────── */
 function DiffBadge({ d }: { d: string }) {
   const cls =
@@ -221,27 +386,51 @@ export default function LeetCodeSession() {
 
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const maxDurationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const phaseRef = useRef(phase)
   phaseRef.current = phase
-  const isDoneAfterEndRef = useRef(false)
+  const followUpCountRef = useRef(0)  // user_question exchanges since last run_success
+  const postRunRef = useRef(false)    // true after run_success, reset on new run
 
-  const { acquireMic, startRecording, stopRecording, releaseMic } = useRecorder()
-  const caption = useLiveCaption(phase === 'user_responding')
+  const { acquireMic, startRecording, stopRecording, releaseMic, getStream } = useRecorder()
+  const caption = useLiveCaption(phase === 'user_responding' || phase === 'coding_free')
+  const meterActive = phase === 'coding_free' || phase === 'user_responding'
+  const volume = useVoiceMeter(meterActive, getStream, {
+    onSilenceAfterSpeech: () => {
+      if (phaseRef.current === 'coding_free') submitQuestion()
+    },
+    silenceDurationMs: 1400,
+  })
 
-  // Auto-submit after 2.5s of silence during user_responding
+  // Silence detection for both always-on (coding_free) and end-interview (user_responding)
   useEffect(() => {
-    if (phase !== 'user_responding') {
-      if (silenceTimerRef.current) { clearTimeout(silenceTimerRef.current); silenceTimerRef.current = null }
+    if (phase === 'user_responding') {
+      // End-of-interview final remarks — silence or 45s max → finish
+      if (!maxDurationTimerRef.current) {
+        maxDurationTimerRef.current = setTimeout(() => {
+          if (phaseRef.current === 'user_responding') finishSession()
+        }, 45000)
+      }
+      if (!caption.trim()) return
+      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current)
+      silenceTimerRef.current = setTimeout(() => {
+        if (phaseRef.current === 'user_responding') finishSession()
+      }, 2500)
       return
     }
-    if (!caption.trim()) return
-    if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current)
-    silenceTimerRef.current = setTimeout(() => {
-      if (phaseRef.current !== 'user_responding') return
-      if (isDoneAfterEndRef.current) finishSession()
-      else doneResponding()
-    }, 2500)
-  }, [caption, phase])
+
+    if (phase === 'coding_free') {
+      return  // silence detection handled by useVoiceMeter RAF loop
+    }
+
+    if (silenceTimerRef.current) { clearTimeout(silenceTimerRef.current); silenceTimerRef.current = null }
+    if (maxDurationTimerRef.current) { clearTimeout(maxDurationTimerRef.current); maxDurationTimerRef.current = null }
+  }, [phase])
+
+  // Pre-acquire mic on mount so the first interview turn has no permission delay
+  useEffect(() => {
+    acquireMic().catch(() => {})
+  }, [])
 
   // Redirect if no problem in state
   useEffect(() => {
@@ -253,9 +442,17 @@ export default function LeetCodeSession() {
     return () => {
       stopAudio()
       if (idleTimerRef.current) clearTimeout(idleTimerRef.current)
+      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current)
+      if (maxDurationTimerRef.current) clearTimeout(maxDurationTimerRef.current)
       releaseMic()
     }
   }, [])
+
+  // Always-on: start recording fresh whenever we enter coding_free
+  useEffect(() => {
+    if (phase !== 'coding_free') return
+    try { startRecording() } catch { /* mic not acquired yet */ }
+  }, [phase])
 
   function resetIdleTimer() {
     if (idleTimerRef.current) clearTimeout(idleTimerRef.current)
@@ -270,9 +467,13 @@ export default function LeetCodeSession() {
     setSessionLog(prev => [...prev, { role, content, timestamp: Date.now(), trigger }])
   }
 
-  async function fetchInterviewerMessage(trigger: string, currentRunOutput?: CodeRun | null) {
+  async function fetchInterviewerMessage(trigger: string, currentRunOutput?: CodeRun | null, pendingUtterance?: string) {
     if (!problem) return ''
-    const res = await fetch('/api/leetcode/interviewer-message', {
+    // Build log from current state, then manually append the pending candidate utterance
+    // so the AI sees it immediately without waiting for React to commit the state update
+    const log = sessionLog.slice(-6).map(t => ({ role: t.role, content: t.content }))
+    if (pendingUtterance) log.push({ role: 'candidate', content: pendingUtterance })
+    const res = await fetch(`${API_URL}/api/leetcode/interviewer-message`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -286,7 +487,7 @@ export default function LeetCodeSession() {
           compile_output: currentRunOutput.compile_output,
           exit_code: currentRunOutput.exit_code,
         } : null,
-        session_log: sessionLog.slice(-6).map(t => ({ role: t.role, content: t.content })),
+        session_log: log,
         follow_up_hints: problem.follow_up_hints,
       }),
     })
@@ -295,16 +496,18 @@ export default function LeetCodeSession() {
     return data.message as string
   }
 
-  async function triggerAIMessage(trigger: string, currentRunOutput?: CodeRun | null) {
+  async function triggerAIMessage(trigger: string, currentRunOutput?: CodeRun | null, pendingUtterance?: string) {
     if (!problem) return
+    // Stop any in-progress always-on recording before AI speaks
+    try { await stopRecording() } catch { /* ignore */ }
     setPhase('ai_speaking')
     try {
-      const message = await fetchInterviewerMessage(trigger, currentRunOutput)
+      const message = await fetchInterviewerMessage(trigger, currentRunOutput, pendingUtterance)
       setAiText(message)
       appendTurn('interviewer', message, trigger)
       speak(message, () => {
-        startRecording()
-        setPhase('user_responding')
+        // Return to always-on listening mode
+        setPhase('coding_free')
       })
     } catch {
       setPhase('coding_free')
@@ -320,8 +523,8 @@ export default function LeetCodeSession() {
       setAiText(message)
       appendTurn('interviewer', message, 'start')
       speak(message, () => {
-        startRecording()
-        setPhase('user_responding')
+        // Drop into always-on listening
+        setPhase('coding_free')
       })
     } catch {
       setPhase('coding_free')
@@ -329,24 +532,46 @@ export default function LeetCodeSession() {
     }
   }
 
-  async function doneResponding() {
+  async function submitQuestion() {
+    const captionText = caption.trim()
     setPhase('ai_processing')
+
+    let blob = new Blob()
     try {
-      const { blob } = await stopRecording()
-      if (blob.size > 100) {
-        const form = new FormData()
-        form.append('audio', blob, 'response.webm')
-        const res = await fetch('/api/transcribe', { method: 'POST', body: form })
-        if (res.ok) {
-          const { transcript } = await res.json()
-          if (transcript?.trim()) appendTurn('candidate', transcript.trim())
-        }
+      const result = await stopRecording()
+      blob = result.blob
+    } catch { /* ignore */ }
+
+    if (captionText) {
+      // Fast path: caption already available — skip Whisper, call Claude immediately
+      appendTurn('candidate', captionText)
+      if (postRunRef.current && ++followUpCountRef.current >= 2) {
+        await finishSession(); return
       }
-    } catch {
-      // transcript failed — continue without it
+      await triggerAIMessage('user_question', null, captionText)
+    } else {
+      // Slow path: no caption — fall back to Whisper
+      let utterance: string | undefined
+      try {
+        if (blob.size > 100) {
+          const form = new FormData()
+          form.append('audio', blob, 'question.webm')
+          const res = await fetch(`${API_URL}/api/transcribe`, { method: 'POST', body: form })
+          if (res.ok) {
+            const { transcript } = await res.json()
+            const clean = transcript.trim()
+            if (clean) {
+              utterance = clean
+              appendTurn('candidate', clean)
+            }
+          }
+        }
+      } catch { /* ignore */ }
+      if (postRunRef.current && ++followUpCountRef.current >= 2) {
+        await finishSession(); return
+      }
+      await triggerAIMessage('user_question', null, utterance)
     }
-    setPhase('coding_free')
-    resetIdleTimer()
   }
 
   async function handleRun() {
@@ -354,7 +579,7 @@ export default function LeetCodeSession() {
     setRunLoading(true)
     resetIdleTimer()
     try {
-      const res = await fetch('/api/leetcode/execute', {
+      const res = await fetch(`${API_URL}/api/leetcode/execute`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ language, code: codeByLang[language], problem_id: problem.id }),
@@ -374,6 +599,8 @@ export default function LeetCodeSession() {
 
       if (phaseRef.current === 'coding_free') {
         const hasError = run.exit_code !== 0 || run.stderr || run.compile_output
+        postRunRef.current = !hasError
+        followUpCountRef.current = 0
         triggerAIMessage(hasError ? 'run_error' : 'run_success', run)
       }
     } catch (e) {
@@ -387,23 +614,13 @@ export default function LeetCodeSession() {
     }
   }
 
-  const handleEndInterview = useCallback(async () => {
+  async function handleEndInterview() {
     if (endingInterview) return
     setEndingInterview(true)
     if (idleTimerRef.current) clearTimeout(idleTimerRef.current)
-    setPhase('end_speaking')
-    try {
-      const message = await fetchInterviewerMessage('end')
-      setAiText(message)
-      appendTurn('interviewer', message, 'end')
-      speak(message, () => {
-        startRecording()
-        setPhase('user_responding')
-      })
-    } catch {
-      finishSession()
-    }
-  }, [endingInterview, sessionLog, codeByLang, language])
+    stopAudio()
+    await finishSession()
+  }
 
   async function finishSession() {
     if (!problem) return
@@ -413,7 +630,7 @@ export default function LeetCodeSession() {
       if (blob.size > 100) {
         const form = new FormData()
         form.append('audio', blob, 'final.webm')
-        const res = await fetch('/api/transcribe', { method: 'POST', body: form })
+        const res = await fetch(`${API_URL}/api/transcribe`, { method: 'POST', body: form })
         if (res.ok) {
           const { transcript } = await res.json()
           if (transcript?.trim()) appendTurn('candidate', transcript.trim())
@@ -423,7 +640,7 @@ export default function LeetCodeSession() {
 
     setPhase('scoring')
     try {
-      const res = await fetch('/api/leetcode/score', {
+      const res = await fetch(`${API_URL}/api/leetcode/score`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -438,7 +655,18 @@ export default function LeetCodeSession() {
         }),
       })
       if (!res.ok) throw new Error('Scoring failed')
-      setScore(await res.json())
+      const result = await res.json()
+      setScore(result)
+      // Silently persist session if user is signed in
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        if (!user) return
+        supabase.from('interview_sessions').insert({
+          user_id: user.id,
+          type: 'leetcode',
+          question: problem.title,
+          score: result,
+        })
+      })
       releaseMic()
       setPhase('results')
     } catch {
@@ -446,9 +674,6 @@ export default function LeetCodeSession() {
       setEndingInterview(false)
     }
   }
-
-  const isDoneAfterEnd = endingInterview && phase === 'user_responding'
-  isDoneAfterEndRef.current = isDoneAfterEnd
 
   if (!problem) return null
 
@@ -466,101 +691,122 @@ export default function LeetCodeSession() {
   /* ── Scoring spinner ────────────────────────────────────────────────────── */
   if (phase === 'scoring') {
     return (
-      <div className="min-h-screen bg-amber-50 flex flex-col items-center justify-center gap-4">
-        <div className="w-14 h-14 rounded-2xl bg-amber-200 border-[3px] border-amber-400 flex items-center justify-center"
-          style={{ boxShadow: '3px 3px 0px #f59e0b' }}>
-          <svg className="w-7 h-7 animate-spin text-amber-700" fill="none" viewBox="0 0 24 24">
+      <div style={{ minHeight: '100vh', background: '#0c0c0e', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, fontFamily: "'Inter', system-ui, sans-serif" }}>
+        <div style={{ width: 52, height: 52, borderRadius: 12, border: '1px solid rgba(16,185,129,0.3)', background: 'rgba(16,185,129,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <svg className="animate-spin" width="24" height="24" fill="none" viewBox="0 0 24 24" style={{ color: '#10b981' }}>
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
           </svg>
         </div>
-        <p className="font-extrabold text-gray-800 text-lg" style={{ fontFamily: "'Baloo 2', cursive" }}>
+        <p style={{ fontFamily: "'Space Grotesk', system-ui, sans-serif", fontWeight: 600, fontSize: '1.1rem', color: '#f0f0f0', margin: 0 }}>
           Scoring your interview…
         </p>
-        <p className="text-gray-500 text-sm">Analyzing your communication, code, and complexity discussion</p>
+        <p style={{ color: '#6b6b7a', fontSize: '0.875rem', margin: 0 }}>Analyzing your communication, code, and complexity discussion</p>
       </div>
     )
   }
 
   const currentCode = codeByLang[language]
-  const hasError = runOutput && (runOutput.exit_code !== 0 || runOutput.stderr || runOutput.compile_output)
   const hasSuccess = runOutput && runOutput.exit_code === 0 && !runOutput.stderr && !runOutput.compile_output
 
   /* ── Main editor UI ─────────────────────────────────────────────────────── */
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50" style={{ height: '100vh', overflow: 'hidden' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#0c0c0e', height: '100vh', overflow: 'hidden', fontFamily: "'Inter', system-ui, sans-serif" }}>
 
       {/* ── Header ── */}
-      <header
-        className="bg-amber-100 border-b-[3px] border-amber-400 px-4 flex items-center justify-between gap-3 shrink-0"
-        style={{ height: 56, boxShadow: '0 3px 0 #fbbf24' }}
-      >
-        <div className="flex items-center gap-3 min-w-0">
+      <header style={{ background: '#141416', borderBottom: '1px solid #2a2a2e', padding: '0 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexShrink: 0, height: 52 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
           <button
             onClick={() => navigate('/practice/leetcode')}
-            className="text-amber-700 hover:text-amber-900 font-bold text-sm cursor-pointer shrink-0"
+            style={{ color: '#6b6b7a', fontWeight: 500, fontSize: '0.85rem', cursor: 'pointer', background: 'none', border: 'none', flexShrink: 0, fontFamily: "'Inter', system-ui, sans-serif', transition: 'color 0.15s'" }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = '#f0f0f0' }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = '#6b6b7a' }}
           >
             ← Back
           </button>
-          <span className="font-extrabold text-gray-900 text-sm truncate" style={{ fontFamily: "'Baloo 2', cursive" }}>
+          <div style={{ width: 1, height: 14, background: '#2a2a2e', flexShrink: 0 }} />
+          <span style={{ fontWeight: 600, color: '#f0f0f0', fontSize: '0.875rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {problem.title}
           </span>
           <DiffBadge d={problem.difficulty} />
           {phase === 'user_responding' && (
-            <span className="flex items-center gap-1 text-xs font-bold text-red-600">
-              <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+            <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.72rem', fontWeight: 700, color: '#ef4444', flexShrink: 0 }}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#ef4444', animation: 'pulse 1s infinite' }} />
               Recording
             </span>
           )}
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
-          {/* Language pills */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
           {(['python', 'javascript', 'java', 'cpp'] as Language[]).map(lang => (
             <button
               key={lang}
-              onClick={() => {
-                setLanguage(lang)
-                setRunOutput(null)
+              onClick={() => { setLanguage(lang); setRunOutput(null) }}
+              style={{
+                padding: '4px 10px',
+                borderRadius: 6,
+                border: `1px solid ${language === lang ? '#10b981' : '#2a2a2e'}`,
+                background: language === lang ? 'rgba(16,185,129,0.12)' : 'transparent',
+                color: language === lang ? '#34d399' : '#6b6b7a',
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontFamily: "'JetBrains Mono', monospace",
+                transition: 'all 0.15s',
               }}
-              className={`rounded-xl border-[2px] px-3 py-1 text-xs font-bold cursor-pointer transition-colors duration-100 ${
-                language === lang
-                  ? 'bg-amber-500 border-amber-700 text-white'
-                  : 'bg-white border-amber-300 text-amber-700 hover:bg-amber-50'
-              }`}
-              style={{ boxShadow: language === lang ? '2px 2px 0px #92400e' : '2px 2px 0px #fde68a' }}
             >
               {LANG_LABELS[lang]}
             </button>
           ))}
 
-          {/* Run button */}
           <button
             onClick={handleRun}
-            disabled={runLoading || phase === 'scoring'}
-            className="rounded-2xl border-[3px] border-amber-700 bg-amber-500 text-white font-extrabold text-sm px-4 py-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            style={{ boxShadow: '3px 3px 0px #92400e' }}
+            disabled={runLoading}
+            style={{
+              padding: '6px 14px',
+              borderRadius: 8,
+              border: 'none',
+              background: '#10b981',
+              color: '#fff',
+              fontWeight: 600,
+              fontSize: '0.82rem',
+              cursor: 'pointer',
+              opacity: runLoading ? 0.6 : 1,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              fontFamily: "'Inter', system-ui, sans-serif",
+            }}
           >
             {runLoading ? (
-              <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+              <svg className="animate-spin" width="14" height="14" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
               </svg>
             ) : (
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+              <svg width="12" height="12" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 010 1.972l-11.54 6.347a1.125 1.125 0 01-1.667-.986V5.653z" />
               </svg>
             )}
             Run
           </button>
 
-          {/* End Interview */}
           {phase !== 'idle' && (
             <button
               onClick={handleEndInterview}
-              disabled={endingInterview || phase === 'scoring'}
-              className="rounded-2xl border-[3px] border-gray-400 bg-white text-gray-700 font-bold text-sm px-4 py-1.5 cursor-pointer disabled:opacity-50 hover:bg-gray-50"
-              style={{ boxShadow: '3px 3px 0px #d1d5db' }}
+              disabled={endingInterview}
+              style={{
+                padding: '6px 14px',
+                borderRadius: 8,
+                border: '1px solid #2a2a2e',
+                background: 'transparent',
+                color: '#6b6b7a',
+                fontWeight: 500,
+                fontSize: '0.82rem',
+                cursor: 'pointer',
+                opacity: endingInterview ? 0.5 : 1,
+                fontFamily: "'Inter', system-ui, sans-serif",
+              }}
             >
               End Interview
             </button>
@@ -573,38 +819,38 @@ export default function LeetCodeSession() {
 
         {/* Left pane — problem */}
         <div
-          className="w-[42%] overflow-y-auto bg-amber-50 border-r-[3px] border-amber-200 p-5"
-          style={{ height: 'calc(100vh - 56px)' }}
+          style={{ width: '42%', overflowY: 'auto', background: '#0f0f11', borderRight: '1px solid #2a2a2e', padding: '18px 20px', height: 'calc(100vh - 52px)' }}
         >
-          <div className="flex items-center gap-2 mb-4">
-            <span className="text-xs font-bold text-amber-600 uppercase tracking-widest">
+          <div style={{ marginBottom: 14 }}>
+            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.68rem', letterSpacing: '0.1em', color: '#10b981' }}>
               #{problem.neetcode_number} · {problem.category.replace(/-/g, ' ')}
             </span>
           </div>
 
-          <p className="text-sm text-gray-700 leading-relaxed mb-5 whitespace-pre-line">
+          <p style={{ fontSize: '0.875rem', color: '#a1a1aa', lineHeight: 1.65, marginBottom: 18, whiteSpace: 'pre-line' }}>
             {problem.description}
           </p>
 
           {problem.examples.map((ex, i) => (
             <div
               key={i}
-              className="rounded-2xl border-[3px] border-amber-200 bg-white p-4 mb-3"
-              style={{ boxShadow: '3px 3px 0px #fde68a' }}
+              style={{ border: '1px solid #2a2a2e', borderRadius: 8, background: '#141416', padding: '12px 14px', marginBottom: 10 }}
             >
-              <p className="text-xs font-bold text-amber-700 uppercase tracking-widest mb-2">Example {i + 1}</p>
-              <code className="text-xs text-gray-800 block mb-1">Input: {ex.input}</code>
-              <code className="text-xs text-gray-800 block mb-1">Output: {ex.output}</code>
-              {ex.explanation && <p className="text-xs text-gray-500 mt-1">{ex.explanation}</p>}
+              <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.65rem', letterSpacing: '0.1em', color: '#10b981', marginBottom: 8 }}>
+                EXAMPLE {i + 1}
+              </p>
+              <code style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.75rem', color: '#d4d4d8', display: 'block', marginBottom: 3 }}>Input: {ex.input}</code>
+              <code style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.75rem', color: '#d4d4d8', display: 'block', marginBottom: 3 }}>Output: {ex.output}</code>
+              {ex.explanation && <p style={{ fontSize: '0.75rem', color: '#6b6b7a', marginTop: 4 }}>{ex.explanation}</p>}
             </div>
           ))}
 
-          <div className="mt-4">
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Constraints</p>
-            <ul className="space-y-1">
+          <div style={{ marginTop: 16 }}>
+            <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.65rem', letterSpacing: '0.1em', color: '#52525b', marginBottom: 8 }}>CONSTRAINTS</p>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
               {problem.constraints.map((c, i) => (
-                <li key={i} className="text-xs text-gray-600 flex items-start gap-1">
-                  <span className="text-amber-400 mt-0.5">·</span> {c}
+                <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 6, fontSize: '0.78rem', color: '#6b6b7a' }}>
+                  <span style={{ color: '#10b981', marginTop: 1, flexShrink: 0 }}>·</span> {c}
                 </li>
               ))}
             </ul>
@@ -677,16 +923,32 @@ export default function LeetCodeSession() {
 
           {/* AI Voice bar */}
           <div
-            className="shrink-0 border-t-[3px] border-amber-200 bg-amber-50 flex items-center gap-4 px-5"
-            style={{ height: 72 }}
+            style={{ flexShrink: 0, borderTop: '1px solid #2a2a2e', background: '#141416', display: 'flex', alignItems: 'center', gap: 12, padding: '0 20px', height: 64 }}
           >
             {phase === 'idle' && (
               <button
                 onClick={beginInterview}
-                className="flex-1 rounded-2xl border-[3px] border-amber-700 bg-amber-500 text-white font-extrabold py-2.5 text-sm cursor-pointer hover:translate-y-[1px] transition-transform duration-150 flex items-center justify-center gap-2"
-                style={{ boxShadow: '3px 3px 0px #92400e' }}
+                style={{
+                  flex: 1,
+                  padding: '10px',
+                  borderRadius: 8,
+                  border: 'none',
+                  background: '#7c3aed',
+                  color: '#fff',
+                  fontWeight: 600,
+                  fontSize: '0.875rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  fontFamily: "'Inter', system-ui, sans-serif",
+                  transition: 'background 0.15s',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = '#6d28d9' }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = '#7c3aed' }}
               >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 010 1.972l-11.54 6.347a1.125 1.125 0 01-1.667-.986V5.653z" />
                 </svg>
                 Start Interview
@@ -695,43 +957,64 @@ export default function LeetCodeSession() {
 
             {(phase === 'intro_speaking' || phase === 'ai_speaking' || phase === 'end_speaking') && (
               <>
-                <div className="flex gap-1 shrink-0">
+                <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
                   {[0, 1, 2].map(i => (
                     <span
                       key={i}
-                      className="w-2 h-2 rounded-full bg-amber-500"
-                      style={{ animation: `bounce 1.2s infinite ${i * 0.2}s` }}
+                      style={{ width: 6, height: 6, borderRadius: '50%', background: '#7c3aed', animation: `bounce 1.2s infinite ${i * 0.2}s` }}
                     />
                   ))}
                 </div>
-                <p className="text-sm text-gray-700 font-medium leading-snug line-clamp-2 flex-1">{aiText}</p>
+                <p style={{ fontSize: '0.875rem', color: '#a1a1aa', fontWeight: 500, lineHeight: 1.4, flex: 1, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{aiText}</p>
               </>
             )}
 
             {phase === 'user_responding' && (
               <>
-                <span className="w-3 h-3 rounded-full bg-red-500 animate-pulse shrink-0" />
-                <p className="text-sm text-gray-600 italic flex-1 line-clamp-1 min-w-0">
+                <VoiceMeter volume={volume} />
+                <p style={{ fontSize: '0.875rem', color: caption ? '#d4d4d8' : '#52525b', fontStyle: caption ? 'italic' : 'normal', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {caption || 'Listening…'}
                 </p>
-                <span className="text-xs text-gray-400 shrink-0">auto-submits on silence</span>
+                <button
+                  onClick={finishSession}
+                  style={{
+                    padding: '5px 12px',
+                    borderRadius: 6,
+                    border: '1px solid #2a2a2e',
+                    background: 'transparent',
+                    color: '#6b6b7a',
+                    fontSize: '0.78rem',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    flexShrink: 0,
+                    fontFamily: "'Inter', system-ui, sans-serif",
+                    transition: 'border-color 0.15s, color 0.15s',
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#52525b'; e.currentTarget.style.color = '#f0f0f0' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#2a2a2e'; e.currentTarget.style.color = '#6b6b7a' }}
+                >
+                  Done
+                </button>
               </>
             )}
 
             {phase === 'ai_processing' && (
-              <div className="flex items-center gap-3 flex-1">
-                <svg className="w-4 h-4 animate-spin text-amber-600 shrink-0" fill="none" viewBox="0 0 24 24">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1 }}>
+                <svg className="animate-spin" width="16" height="16" fill="none" viewBox="0 0 24 24" style={{ color: '#7c3aed', flexShrink: 0 }}>
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
                 </svg>
-                <span className="text-sm text-gray-500">Processing…</span>
+                <span style={{ fontSize: '0.875rem', color: '#6b6b7a' }}>Processing…</span>
               </div>
             )}
 
             {phase === 'coding_free' && (
-              <p className="text-sm text-gray-500 flex-1">
-                Interviewer is watching — run your code or speak your thinking at any time.
-              </p>
+              <>
+                <VoiceMeter volume={volume} />
+                <p style={{ fontSize: '0.875rem', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: caption.trim() ? '#d4d4d8' : '#52525b', fontStyle: caption.trim() ? 'italic' : 'normal' }}>
+                  {caption.trim() || 'Listening — just ask me anything…'}
+                </p>
+              </>
             )}
           </div>
         </div>
