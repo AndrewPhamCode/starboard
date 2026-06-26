@@ -124,6 +124,7 @@ def score_star_response(
     transcript: str,
     follow_up_question: Optional[str] = None,
     follow_up_transcript: Optional[str] = None,
+    session_history: Optional[list] = None,
 ) -> dict:
     if not settings.anthropic_api_key:
         raise HTTPException(status_code=500, detail="Anthropic API key not configured")
@@ -131,6 +132,7 @@ def score_star_response(
     client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
 
     has_follow_up = bool(follow_up_question and follow_up_transcript)
+    has_session_history = bool(session_history and len(session_history) > 2)
 
     system = """You are a senior interview coach evaluating STAR method responses.
 Score each dimension using these exact anchors:
@@ -174,19 +176,29 @@ FOLLOW-UP HANDLING (only score if a follow-up question and answer are provided)
 
 Return only valid JSON — no markdown fences, no extra text."""
 
-    follow_up_section = ""
-    if has_follow_up:
-        follow_up_section = f"""
+    if has_session_history:
+        conversation_lines = "\n".join(
+            f"{'Interviewer' if t['role'] == 'interviewer' else 'Candidate'}: {t['content']}"
+            for t in session_history
+        )
+        answer_section = f"""Full interview conversation:
+{conversation_lines}"""
+    else:
+        follow_up_section = ""
+        if has_follow_up:
+            follow_up_section = f"""
 
 Follow-up question: {follow_up_question}
 
 Candidate's follow-up answer: {follow_up_transcript}"""
+        answer_section = f"Candidate answer: {transcript}{follow_up_section}"
 
+    has_follow_up = has_follow_up or has_session_history
     follow_up_json = '"follow_up_handling": <1-5>,' if has_follow_up else '"follow_up_handling": null,'
 
     user = f"""Question: {question}
 
-Candidate answer: {transcript}{follow_up_section}
+{answer_section}
 
 Score each dimension using the anchors above.
 Return exactly this JSON structure:

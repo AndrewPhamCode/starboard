@@ -28,6 +28,7 @@ class ScoreRequest(BaseModel):
     follow_up_transcript: Optional[str] = None
     duration_seconds: Optional[float] = None
     follow_up_duration_seconds: Optional[float] = None
+    session_history: Optional[list] = None
 
 
 class StarRewrite(BaseModel):
@@ -109,6 +110,7 @@ async def score(body: ScoreRequest):
         transcript=body.transcript,
         follow_up_question=body.follow_up_question,
         follow_up_transcript=body.follow_up_transcript,
+        session_history=body.session_history,
     )
 
     result["delivery"] = {

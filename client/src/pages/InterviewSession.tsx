@@ -10,11 +10,9 @@ import { API_URL } from '../lib/api'
 type SessionState =
   | 'intro'
   | 'question_speaking'
-  | 'recording_1'
-  | 'processing_1'
-  | 'followup_speaking'
-  | 'recording_2'
-  | 'processing_2'
+  | 'recording'
+  | 'processing'
+  | 'ai_speaking'
   | 'scoring'
   | 'results'
 
@@ -374,55 +372,58 @@ function ThinkingDots() {
   )
 }
 
-/* ─── Professional avatar illustration ──────────────────────────────────── */
-function AvatarIllustration() {
+/* ─── Interviewer avatar — clean photo-style initials card ──────────────── */
+function AvatarIllustration({ speaking }: { speaking?: boolean }) {
   return (
-    <svg viewBox="0 0 200 200" width="200" height="200" xmlns="http://www.w3.org/2000/svg">
-      <rect width="200" height="200" fill="#1a2540"/>
-      {/* Shoulders / suit */}
-      <path d="M 10 200 Q 10 158 100 148 Q 190 158 190 200 Z" fill="#1e3a5f"/>
-      <path d="M 100 148 L 80 180 L 100 170 L 120 180 Z" fill="#0f2540"/>
-      <path d="M 100 148 L 93 163 L 100 160 L 107 163 Z" fill="#e2e8f0"/>
-      {/* Tie */}
-      <path d="M 97 160 L 95 180 L 100 184 L 105 180 L 103 160 L 100 165 Z" fill="#7c3aed"/>
-      {/* Neck */}
-      <path d="M 88 132 Q 88 148 100 148 Q 112 148 112 132 Z" fill="#c4956a"/>
-      {/* Head */}
-      <ellipse cx="100" cy="98" rx="46" ry="50" fill="#c4956a"/>
-      {/* Hair */}
-      <path d="M 54 88 Q 56 50 100 46 Q 144 50 146 88 Q 138 66 100 63 Q 62 66 54 88 Z" fill="#1a1008"/>
-      <path d="M 54 88 Q 49 98 53 112 Q 57 98 60 90 Z" fill="#1a1008"/>
-      <path d="M 146 88 Q 151 98 147 112 Q 143 98 140 90 Z" fill="#1a1008"/>
-      {/* Ears */}
-      <ellipse cx="54" cy="102" rx="7" ry="9" fill="#b8845a"/>
-      <ellipse cx="146" cy="102" rx="7" ry="9" fill="#b8845a"/>
-      <ellipse cx="54" cy="102" rx="4" ry="6" fill="#c4956a"/>
-      <ellipse cx="146" cy="102" rx="4" ry="6" fill="#c4956a"/>
-      {/* Eye whites */}
-      <ellipse cx="81" cy="95" rx="11" ry="12" fill="white"/>
-      <ellipse cx="119" cy="95" rx="11" ry="12" fill="white"/>
-      {/* Irises */}
-      <circle cx="82" cy="96" r="7" fill="#2c4a8c"/>
-      <circle cx="120" cy="96" r="7" fill="#2c4a8c"/>
-      {/* Pupils */}
-      <circle cx="82" cy="97" r="4" fill="#0d0d0d"/>
-      <circle cx="120" cy="97" r="4" fill="#0d0d0d"/>
-      {/* Eye shine */}
-      <circle cx="84" cy="94" r="1.5" fill="white" fillOpacity="0.85"/>
-      <circle cx="122" cy="94" r="1.5" fill="white" fillOpacity="0.85"/>
-      {/* Eyebrows */}
-      <path d="M 69 81 Q 81 76 93 80" stroke="#1a1008" strokeWidth="3" fill="none" strokeLinecap="round"/>
-      <path d="M 107 80 Q 119 76 131 81" stroke="#1a1008" strokeWidth="3" fill="none" strokeLinecap="round"/>
-      {/* Nose */}
-      <path d="M 100 103 Q 95 115 97 120 Q 100 122 103 120 Q 105 115 100 103" fill="#b8845a" fillOpacity="0.5"/>
-      <circle cx="95" cy="119" r="4" fill="#b8845a"/>
-      <circle cx="105" cy="119" r="4" fill="#b8845a"/>
-      {/* Mouth */}
-      <path d="M 86 133 Q 100 140 114 133" stroke="#8b5e3c" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
-      {/* Cheek shadows */}
-      <ellipse cx="68" cy="115" rx="12" ry="8" fill="#b8845a" fillOpacity="0.2"/>
-      <ellipse cx="132" cy="115" rx="12" ry="8" fill="#b8845a" fillOpacity="0.2"/>
-    </svg>
+    <div style={{
+      width: '100%', height: '100%',
+      background: 'linear-gradient(145deg, #1e2d45 0%, #162236 100%)',
+      display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center',
+      gap: 0, position: 'relative', overflow: 'hidden',
+    }}>
+      {/* Subtle background texture */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        background: 'radial-gradient(ellipse at 50% 30%, rgba(99,130,190,0.08) 0%, transparent 70%)',
+      }} />
+      {/* Shoulders silhouette */}
+      <div style={{
+        position: 'absolute', bottom: -10, left: '50%', transform: 'translateX(-50%)',
+        width: 240, height: 110,
+        background: 'linear-gradient(180deg, #1a2e4a 0%, #111c2e 100%)',
+        borderRadius: '50% 50% 0 0 / 30% 30% 0 0',
+      }} />
+      {/* Head circle */}
+      <div style={{
+        width: 88, height: 88, borderRadius: '50%',
+        background: 'linear-gradient(145deg, #2d4a72, #1e3255)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        position: 'relative', zIndex: 1,
+        boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
+        marginBottom: 8,
+      }}>
+        <span style={{
+          fontFamily: "'Space Grotesk', system-ui, sans-serif",
+          fontSize: '2rem', fontWeight: 700,
+          color: '#93b4d4', letterSpacing: '-0.02em',
+          userSelect: 'none',
+        }}>A</span>
+      </div>
+      {/* Speaking mouth animation */}
+      <div style={{ position: 'relative', zIndex: 1, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3 }}>
+        {speaking ? (
+          [0.9, 0.6, 1, 0.7, 0.85].map((scale, i) => (
+            <div key={i} style={{
+              width: 3, height: `${10 * scale}px`, borderRadius: 2,
+              background: '#4a9eff', opacity: 0.7,
+            }} className="animate-pulse" />
+          ))
+        ) : (
+          <div style={{ width: 20, height: 2, background: 'rgba(100,130,180,0.3)', borderRadius: 2 }} />
+        )}
+      </div>
+    </div>
   )
 }
 
@@ -624,11 +625,9 @@ function useTimer(running: boolean) {
 const STATE_LABELS: Partial<Record<SessionState, string>> = {
   intro: 'Get ready',
   question_speaking: 'Alex is speaking…',
-  recording_1: 'Your turn — recording',
-  processing_1: 'Transcribing…',
-  followup_speaking: 'Alex has a follow-up…',
-  recording_2: 'Answer the follow-up',
-  processing_2: 'Transcribing…',
+  recording: 'Your turn — recording',
+  processing: 'Transcribing…',
+  ai_speaking: 'Alex is responding…',
   scoring: 'Scoring your interview…',
   results: 'Interview complete',
 }
@@ -642,24 +641,18 @@ export default function InterviewSession() {
   const question: Question | undefined = (location.state as { question?: Question })?.question
 
   const [sessionState, setSessionState] = useState<SessionState>('intro')
-  const [followUpQuestion, setFollowUpQuestion] = useState('')
-  const [transcript1, setTranscript1] = useState('')
-  const [transcript2, setTranscript2] = useState('')
-  const [duration1, setDuration1] = useState(0)
+  const [turnNumber, setTurnNumber] = useState(0)
+  const [sessionHistory, setSessionHistory] = useState<{role: string; content: string}[]>([])
+  const [transcripts, setTranscripts] = useState<{text: string; duration: number}[]>([])
+  const [aiMessage, setAiMessage] = useState('')
+  const persona = (location.state as { persona?: string })?.persona ?? 'direct'
   const isSystemDesign = type === 'system-design'
   const [score, setScore] = useState<ScoreResult | DesignScoreResult | null>(null)
   const [error, setError] = useState('')
 
-  const { acquireMic, startRecording, stopRecording, releaseMic, getStream, muteAudio } = useRecorder()
-  const isRecording = sessionState === 'recording_1' || sessionState === 'recording_2'
-  const [isMuted, setIsMuted] = useState(false)
+  const { acquireMic, startRecording, stopRecording, releaseMic, getStream } = useRecorder()
+  const isRecording = sessionState === 'recording'
   const [cameraOn, setCameraOn] = useState(true)
-
-  function toggleMute() {
-    const next = !isMuted
-    setIsMuted(next)
-    muteAudio(next)
-  }
 
   function toggleCamera() {
     setCameraOn(v => !v)
@@ -677,28 +670,30 @@ export default function InterviewSession() {
   const q = question
 
   function autoStop() {
-    if (sessionState === 'recording_1') stopAnswer1()
-    else if (sessionState === 'recording_2') stopAnswer2()
+    if (sessionState === 'recording') stopAnswer()
   }
 
   const silenceCountdown = useSilenceDetector(isRecording, getStream, autoStop)
 
-  /* ── Step 1: acquire mic in the click handler (user gesture), then start TTS ── */
+  /* ── Step 1: acquire mic in the click handler (user gesture), then speak question ── */
   async function beginInterview() {
     try {
-      await acquireMic() // Must happen during the click event — Chrome requires a user gesture
+      await acquireMic()
     } catch (e) {
       const err = e as DOMException
       console.error('getUserMedia failed:', err.name, err.message)
       setError(`Mic error (${err.name || 'unknown'}): ${err.message || 'Could not access microphone.'}`)
       return
     }
-    console.log('[interview] mic acquired, starting TTS')
+    const initialHistory = [{ role: 'interviewer', content: q.text }]
+    setSessionHistory(initialHistory)
+    setTurnNumber(0)
+    setTranscripts([])
     setSessionState('question_speaking')
     speak(q.text, () => {
       try {
-        startRecording() // Mic already granted — this is now synchronous
-        setSessionState('recording_1')
+        startRecording()
+        setSessionState('recording')
       } catch {
         setError('Microphone error. Please refresh and try again.')
         setSessionState('intro')
@@ -706,13 +701,12 @@ export default function InterviewSession() {
     })
   }
 
-  /* ── Step 2: stop recording answer 1, transcribe, get follow-up ── */
-  async function stopAnswer1() {
-    setSessionState('processing_1')
+  /* ── After each recording: transcribe → AI responds → loop until done ── */
+  async function stopAnswer() {
+    setSessionState('processing')
     setError('')
     try {
       const { blob, duration } = await stopRecording()
-      setDuration1(duration)
 
       const form = new FormData()
       form.append('audio', blob, 'answer.webm')
@@ -720,60 +714,87 @@ export default function InterviewSession() {
       if (!transcribeRes.ok) throw new Error(await apiError(transcribeRes))
       const { transcript } = await transcribeRes.json()
       if (!transcript) throw new Error('Transcription returned empty — please speak clearly and try again.')
-      setTranscript1(transcript)
 
-      const fuRes = await fetch(`${API_URL}/api/follow-up`, {
+      const newTranscript = { text: transcript, duration }
+      const updatedTranscripts = [...transcripts, newTranscript]
+      setTranscripts(updatedTranscripts)
+
+      const updatedHistory = [...sessionHistory, { role: 'candidate', content: transcript }]
+      setSessionHistory(updatedHistory)
+
+      const MAX_TURNS = 3
+
+      if (turnNumber >= MAX_TURNS) {
+        await scoreSession(updatedTranscripts, updatedHistory)
+        return
+      }
+
+      const turnRes = await fetch(`${API_URL}/api/interview/turn`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: q.text, transcript }),
+        body: JSON.stringify({
+          question: q.text,
+          transcript_so_far: transcript,
+          turn_number: turnNumber,
+          session_history: updatedHistory,
+          persona,
+        }),
       })
-      if (!fuRes.ok) throw new Error(await apiError(fuRes))
-      const { follow_up, reaction } = await fuRes.json()
-      setFollowUpQuestion(follow_up)
+      if (!turnRes.ok) throw new Error(await apiError(turnRes))
+      const { message, is_done } = await turnRes.json()
 
-      setSessionState('followup_speaking')
-      speak(`${reaction} ${follow_up}`, () => {
+      const historyWithAI = [...updatedHistory, { role: 'interviewer', content: message }]
+      setSessionHistory(historyWithAI)
+      setAiMessage(message)
+
+      if (is_done) {
+        await scoreSession(updatedTranscripts, historyWithAI)
+        return
+      }
+
+      setSessionState('ai_speaking')
+      speak(message, () => {
         try {
-          startRecording() // Stream is still cached from step 1
-          setSessionState('recording_2')
+          startRecording()
+          setTurnNumber(n => n + 1)
+          setSessionState('recording')
         } catch {
-          setError('Microphone error starting follow-up recording. Please try again.')
-          setSessionState('recording_1')
+          setError('Microphone error. Please try again.')
+          setSessionState('recording')
         }
       })
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Something went wrong processing your answer.')
-      setSessionState('recording_1')
+      setSessionState('recording')
     }
   }
 
-  /* ── Step 3: stop recording answer 2, transcribe, score ── */
-  async function stopAnswer2() {
-    setSessionState('processing_2')
+  /* ── Score the full conversation ── */
+  async function scoreSession(
+    allTranscripts: {text: string; duration: number}[],
+    history: {role: string; content: string}[],
+  ) {
+    setSessionState('scoring')
     setError('')
     try {
-      const { blob, duration } = await stopRecording()
-
-      const form = new FormData()
-      form.append('audio', blob, 'answer.webm')
-      const transcribeRes = await fetch(`${API_URL}/api/transcribe`, { method: 'POST', body: form })
-      if (!transcribeRes.ok) throw new Error(await apiError(transcribeRes))
-      const { transcript: followUpTranscript } = await transcribeRes.json()
-      setTranscript2(followUpTranscript ?? '')
-
-      setSessionState('scoring')
+      const firstTranscript = allTranscripts[0]?.text ?? ''
+      const totalDuration = allTranscripts.reduce((sum, t) => sum + t.duration, 0)
+      const candidateTurns = history.filter(h => h.role === 'candidate')
+      const interviewerFollowUps = history.filter(h => h.role === 'interviewer').slice(1)
 
       const scoreEndpoint = isSystemDesign ? `${API_URL}/api/score/system-design` : `${API_URL}/api/score`
       const scorePayload = isSystemDesign
-        ? { question: q.text, transcript: transcript1, duration_seconds: duration1 || null }
+        ? { question: q.text, transcript: firstTranscript, duration_seconds: totalDuration || null }
         : {
             question: q.text,
-            transcript: transcript1,
-            follow_up_question: followUpQuestion || null,
-            follow_up_transcript: followUpTranscript || null,
-            duration_seconds: duration1 || null,
-            follow_up_duration_seconds: duration || null,
+            transcript: firstTranscript,
+            follow_up_question: interviewerFollowUps[0]?.content ?? null,
+            follow_up_transcript: candidateTurns[1]?.content ?? null,
+            duration_seconds: allTranscripts[0]?.duration || null,
+            follow_up_duration_seconds: allTranscripts.slice(1).reduce((s, t) => s + t.duration, 0) || null,
+            session_history: history,
           }
+
       const scoreRes = await fetch(scoreEndpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -782,17 +803,18 @@ export default function InterviewSession() {
       if (!scoreRes.ok) throw new Error(await apiError(scoreRes))
       const result = await scoreRes.json()
       setScore(result as ScoreResult)
-      // Silently persist session if user is signed in
+
       supabase.auth.getUser().then(({ data: { user } }) => {
         if (!user) return
         supabase.from('interview_sessions').insert({
           user_id: user.id,
-          type: 'behavioral',
+          type: isSystemDesign ? 'system-design' : 'behavioral',
           question: q.text,
-          transcript: [transcript1, followUpTranscript].filter(Boolean).join('\n\n'),
+          transcript: candidateTurns.map(t => t.content).join('\n\n'),
           score: result,
         })
       })
+
       releaseMic()
       setSessionState('results')
     } catch (e) {
@@ -802,13 +824,14 @@ export default function InterviewSession() {
     }
   }
 
-  const speaking = sessionState === 'question_speaking' || sessionState === 'followup_speaking'
+  const speaking = sessionState === 'question_speaking' || sessionState === 'ai_speaking'
   const subtitle = sessionState === 'question_speaking' ? q.text
-    : sessionState === 'followup_speaking' ? followUpQuestion
+    : sessionState === 'ai_speaking' ? aiMessage
     : undefined
 
   /* ─── Results view ─────────────────────────────────────────────────────── */
   if (sessionState === 'results' && score) {
+    const conversationTurns = sessionHistory.slice(1) // skip initial question read-aloud
     return (
       <div style={{ minHeight: '100vh', background: '#0c0c0e', fontFamily: "'Inter', system-ui, sans-serif" }}>
         <div style={{ maxWidth: 680, margin: '0 auto', padding: '32px 24px' }}>
@@ -843,20 +866,34 @@ export default function InterviewSession() {
             </button>
           </div>
 
-          {/* Transcripts */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 8 }}>
-            <div style={{ padding: '14px 16px', border: '1px solid rgba(124,58,237,0.2)', borderRadius: 10, background: 'rgba(124,58,237,0.05)' }}>
-              <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.65rem', letterSpacing: '0.1em', color: '#7c3aed', marginBottom: 6 }}>YOUR ANSWER</p>
-              <p style={{ color: '#a1a1aa', fontSize: '0.875rem', lineHeight: 1.6, margin: 0 }}>{transcript1}</p>
-            </div>
-            {transcript2 && (
-              <div style={{ padding: '14px 16px', border: '1px solid rgba(99,102,241,0.2)', borderRadius: 10, background: 'rgba(99,102,241,0.05)' }}>
-                <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.65rem', letterSpacing: '0.1em', color: '#818cf8', marginBottom: 6 }}>
-                  FOLLOW-UP: "{followUpQuestion}"
+          {/* Conversation transcript */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
+            {conversationTurns.map((turn, i) => (
+              <div
+                key={i}
+                style={{
+                  padding: '12px 16px',
+                  border: turn.role === 'candidate'
+                    ? '1px solid rgba(124,58,237,0.2)'
+                    : '1px solid rgba(71,85,105,0.3)',
+                  borderRadius: 10,
+                  background: turn.role === 'candidate'
+                    ? 'rgba(124,58,237,0.05)'
+                    : 'rgba(30,41,59,0.4)',
+                }}
+              >
+                <p style={{
+                  fontFamily: "'JetBrains Mono', monospace",
+                  fontSize: '0.62rem',
+                  letterSpacing: '0.1em',
+                  color: turn.role === 'candidate' ? '#7c3aed' : '#64748b',
+                  marginBottom: 5,
+                }}>
+                  {turn.role === 'candidate' ? 'YOU' : 'ALEX'}
                 </p>
-                <p style={{ color: '#a1a1aa', fontSize: '0.875rem', lineHeight: 1.6, margin: 0 }}>{transcript2}</p>
+                <p style={{ color: '#a1a1aa', fontSize: '0.875rem', lineHeight: 1.6, margin: 0 }}>{turn.content}</p>
               </div>
-            )}
+            ))}
           </div>
 
           {isSystemDesign
@@ -869,7 +906,7 @@ export default function InterviewSession() {
   }
 
   /* ─── Interview room view (Zoom-style) ────────────────────────────────── */
-  const isProcessingState = sessionState === 'processing_1' || sessionState === 'processing_2' || sessionState === 'scoring'
+  const isProcessingState = sessionState === 'processing' || sessionState === 'scoring'
 
   return (
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: '#111318', overflow: 'hidden', fontFamily: "'Inter', system-ui, sans-serif" }}>
@@ -889,10 +926,15 @@ export default function InterviewSession() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {isRecording ? (
-            <>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#ef4444', display: 'inline-block' }} className="animate-pulse"/>
               <span style={{ fontFamily: 'monospace', color: '#f0f0f0', fontSize: '0.95rem', fontWeight: 600, letterSpacing: '0.05em' }}>{timer}</span>
-            </>
+              {turnNumber > 0 && (
+                <span style={{ padding: '2px 8px', background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(124,58,237,0.3)', borderRadius: 6, color: '#a78bfa', fontSize: '0.7rem', fontWeight: 600 }}>
+                  Follow-up {turnNumber}
+                </span>
+              )}
+            </div>
           ) : (
             <span style={{ color: '#6b7280', fontSize: '0.82rem' }}>{STATE_LABELS[sessionState]}</span>
           )}
@@ -918,11 +960,13 @@ export default function InterviewSession() {
         <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 20, zIndex: 1 }}>
           <div style={{
             width: 200, height: 200, borderRadius: '50%', overflow: 'hidden',
-            border: speaking ? '3px solid #22c55e' : '3px solid #2d3748',
-            boxShadow: speaking ? '0 0 0 6px rgba(34,197,94,0.12), 0 0 60px rgba(34,197,94,0.06)' : '0 0 0 1px rgba(255,255,255,0.04)',
+            border: speaking ? '3px solid #4a9eff' : '3px solid #2d3748',
+            boxShadow: speaking
+              ? '0 0 0 6px rgba(74,158,255,0.12), 0 0 60px rgba(74,158,255,0.06)'
+              : '0 0 0 1px rgba(255,255,255,0.04)',
             transition: 'border-color 0.4s, box-shadow 0.4s',
           }}>
-            <AvatarIllustration />
+            <AvatarIllustration speaking={speaking} />
           </div>
           {speaking && <WaveformBars />}
           {isProcessingState && !error && sessionState !== 'scoring' && <ThinkingDots />}
@@ -1023,30 +1067,56 @@ export default function InterviewSession() {
           </button>
         ) : (
           <>
-            {/* Mic mute toggle */}
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-              <button
-                onClick={isRecording ? (sessionState === 'recording_1' ? stopAnswer1 : stopAnswer2) : toggleMute}
-                style={{ width: 48, height: 48, borderRadius: '50%', background: isRecording ? '#ef4444' : isMuted ? '#374151' : '#232630', border: isMuted && !isRecording ? '2px solid #ef4444' : 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.2s', boxShadow: isRecording ? '0 0 0 3px rgba(239,68,68,0.25)' : 'none' }}
-              >
-                {isRecording ? (
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><rect x="4" y="4" width="16" height="16" rx="3"/></svg>
-                ) : isMuted ? (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round"><line x1="2" y1="2" x2="22" y2="22"/><path d="M18.89 13.23A7.12 7.12 0 0 0 19 12h-2a5.12 5.12 0 0 1-.06.74M5 10v2a7 7 0 0 0 11.29 5.53M15 9.34V5a3 3 0 0 0-5.68-1.33M9 9v3a3 3 0 0 0 5.12 2.12M12 19v3M8 23h8"/></svg>
-                ) : (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="#9ca3af"><path d="M12 1a4 4 0 014 4v6a4 4 0 01-8 0V5a4 4 0 014-4zm-1 17.93V21h-2v2h6v-2h-2v-2.07A8.001 8.001 0 0020 11h-2a6 6 0 01-12 0H4a8.001 8.001 0 017 6.93z"/></svg>
-                )}
-              </button>
-              <span style={{ color: isRecording ? '#ef4444' : isMuted ? '#ef4444' : '#6b7280', fontSize: '0.65rem' }}>
-                {silenceCountdown !== null ? `${silenceCountdown}s…` : isRecording ? 'Stop' : isMuted ? 'Unmute' : 'Mute'}
-              </span>
+            {/* Center status — passive, no click needed */}
+            <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', gap: 10 }}>
+              {isRecording && (
+                <>
+                  <div style={{ display: 'flex', gap: 3 }}>
+                    {[0, 1, 2, 3].map(i => (
+                      <div key={i} style={{ width: 3, borderRadius: 2, background: '#22c55e', animationName: 'none' }}
+                        className="animate-pulse"
+                        ref={el => { if (el) el.style.height = `${8 + Math.random() * 14}px` }}
+                      />
+                    ))}
+                  </div>
+                  <span style={{ color: '#9ca3af', fontSize: '0.82rem' }}>
+                    {silenceCountdown !== null
+                      ? `Finishing in ${silenceCountdown}s…`
+                      : 'Listening — stop speaking to continue'}
+                  </span>
+                  {/* Fallback manual done button — small and secondary */}
+                  <button
+                    onClick={stopAnswer}
+                    style={{ padding: '4px 12px', background: 'transparent', border: '1px solid #374151', borderRadius: 6, color: '#6b7280', fontSize: '0.72rem', cursor: 'pointer' }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = '#6b7280'; e.currentTarget.style.color = '#9ca3af' }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = '#374151'; e.currentTarget.style.color = '#6b7280' }}
+                  >
+                    Done speaking
+                  </button>
+                </>
+              )}
+              {isProcessingState && !error && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 7, color: '#6b7280' }}>
+                  <svg className="animate-spin" width="13" height="13" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="10" stroke="#374151" strokeWidth="3"/>
+                    <path d="M12 2a10 10 0 010 20" stroke="#6b7280" strokeWidth="3" strokeLinecap="round"/>
+                  </svg>
+                  <span style={{ fontSize: '0.78rem' }}>{sessionState === 'scoring' ? 'Scoring your interview…' : 'Processing…'}</span>
+                </div>
+              )}
+              {sessionState === 'ai_speaking' && (
+                <span style={{ color: '#9ca3af', fontSize: '0.82rem' }}>Alex is speaking…</span>
+              )}
+              {sessionState === 'question_speaking' && (
+                <span style={{ color: '#9ca3af', fontSize: '0.82rem' }}>Listen to the question…</span>
+              )}
             </div>
 
             {/* Camera toggle */}
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+            <div style={{ position: 'absolute', left: 24, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
               <button
                 onClick={toggleCamera}
-                style={{ width: 48, height: 48, borderRadius: '50%', background: cameraOn ? '#232630' : '#374151', border: cameraOn ? 'none' : '2px solid #ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.2s' }}
+                style={{ width: 44, height: 44, borderRadius: '50%', background: cameraOn ? '#232630' : '#374151', border: cameraOn ? 'none' : '2px solid #ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.2s' }}
               >
                 {cameraOn ? (
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
@@ -1054,19 +1124,8 @@ export default function InterviewSession() {
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round"><line x1="2" y1="2" x2="22" y2="22"/><path d="M16 16H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h3"/><path d="M22.5 8.5L19 12l3.5 3.5V8.5z"/></svg>
                 )}
               </button>
-              <span style={{ color: cameraOn ? '#6b7280' : '#ef4444', fontSize: '0.65rem' }}>{cameraOn ? 'Camera' : 'Off'}</span>
+              <span style={{ color: cameraOn ? '#6b7280' : '#ef4444', fontSize: '0.62rem' }}>{cameraOn ? 'Camera' : 'Off'}</span>
             </div>
-
-            {/* Processing indicator */}
-            {isProcessingState && !error && sessionState !== 'scoring' && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 7, color: '#6b7280', position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
-                <svg className="animate-spin" width="13" height="13" viewBox="0 0 24 24" fill="none">
-                  <circle cx="12" cy="12" r="10" stroke="#374151" strokeWidth="3"/>
-                  <path d="M12 2a10 10 0 010 20" stroke="#6b7280" strokeWidth="3" strokeLinecap="round"/>
-                </svg>
-                <span style={{ fontSize: '0.78rem' }}>Processing audio…</span>
-              </div>
-            )}
 
             {/* End Interview */}
             <button

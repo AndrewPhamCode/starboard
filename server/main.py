@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from routers.company import router as company_router
+from routers.interview import router as interview_router
 from routers.leetcode import router as leetcode_router
 from routers.follow_up import router as follow_up_router
 from routers.profile import router as profile_router
@@ -25,6 +26,7 @@ app.include_router(questions_router, prefix="/api")
 app.include_router(transcribe_router, prefix="/api")
 app.include_router(score_router, prefix="/api")
 app.include_router(follow_up_router, prefix="/api")
+app.include_router(interview_router, prefix="/api")
 app.include_router(resume_router, prefix="/api")
 app.include_router(profile_router, prefix="/api")
 app.include_router(tts_router, prefix="/api")
