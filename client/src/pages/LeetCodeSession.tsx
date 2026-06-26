@@ -880,11 +880,11 @@ export default function LeetCodeSession() {
                 tabSize: language === 'python' ? 4 : 2,
                 automaticLayout: true,
                 padding: { top: 12 },
-                quickSuggestions: { other: true, comments: false, strings: false },
-                suggestOnTriggerCharacters: true,
-                acceptSuggestionOnEnter: 'on',
-                wordBasedSuggestions: 'matchingDocuments',
-                parameterHints: { enabled: true },
+                quickSuggestions: false,
+                suggestOnTriggerCharacters: false,
+                acceptSuggestionOnEnter: 'off',
+                wordBasedSuggestions: 'off',
+                parameterHints: { enabled: false },
               }}
             />
           </div>

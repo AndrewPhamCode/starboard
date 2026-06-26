@@ -1,0 +1,43 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - link "Back" [ref=e6] [cursor=pointer]:
+        - /url: /
+        - img [ref=e7]
+        - text: Back
+      - button "Previous mode" [ref=e10] [cursor=pointer]:
+        - img [ref=e11]
+      - generic [ref=e13]: Behavioral
+      - button "Next mode" [ref=e14] [cursor=pointer]:
+        - img [ref=e15]
+  - generic [ref=e18]:
+    - generic [ref=e19]:
+      - heading "Master behavioral interviews" [level=1] [ref=e20]
+      - paragraph [ref=e21]: Practice the STAR method — Situation, Task, Action, Result — until your stories land every time.
+    - generic [ref=e23]:
+      - paragraph [ref=e24]: SEARCH BY COMPANY
+      - generic [ref=e25]:
+        - textbox "e.g. Google, Amazon, Stripe…" [ref=e26]
+        - button "Search" [disabled] [ref=e27] [cursor=pointer]
+      - generic [ref=e28]:
+        - button "Google" [ref=e29] [cursor=pointer]
+        - button "Amazon" [ref=e30] [cursor=pointer]
+        - button "Meta" [ref=e31] [cursor=pointer]
+        - button "Microsoft" [ref=e32] [cursor=pointer]
+        - button "Apple" [ref=e33] [cursor=pointer]
+        - button "Stripe" [ref=e34] [cursor=pointer]
+        - button "Airbnb" [ref=e35] [cursor=pointer]
+        - button "Uber" [ref=e36] [cursor=pointer]
+    - generic [ref=e37]:
+      - paragraph [ref=e38]: CATEGORY
+      - button "All categories" [ref=e40] [cursor=pointer]:
+        - generic [ref=e41]: All categories
+        - img [ref=e42]
+    - generic [ref=e44]:
+      - paragraph [ref=e45]: DIFFICULTY
+      - generic [ref=e46]:
+        - button "Intern" [ref=e47] [cursor=pointer]
+        - button "Mid-level" [ref=e48] [cursor=pointer]
+        - button "Senior" [ref=e49] [cursor=pointer]
+    - paragraph [ref=e51]: "Tip: Be specific. Interviewers want real examples with measurable results, not hypotheticals."
+    - img [ref=e53]

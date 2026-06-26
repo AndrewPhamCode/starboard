@@ -3,7 +3,7 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from services.claude_service import score_star_response
+from services.claude_service import score_star_response, score_system_design_response
 
 router = APIRouter(prefix="/score", tags=["score"])
 
@@ -53,6 +53,41 @@ class ScoreResponse(BaseModel):
     delivery: DeliveryScores
     feedback: str
     rewrite: StarRewrite
+
+
+class DesignScoreRequest(BaseModel):
+    question: str
+    transcript: str
+    duration_seconds: Optional[float] = None
+
+
+class DesignScoreResponse(BaseModel):
+    clarification: int
+    design: int
+    deep_dive: int
+    tradeoffs: int
+    scale: int
+    communication: int
+    filler_word_count: int
+    words_per_minute: int
+    feedback: str
+    model_answer: str
+
+
+@router.post("/system-design", response_model=DesignScoreResponse)
+async def score_design(body: DesignScoreRequest):
+    if not body.transcript.strip():
+        raise HTTPException(status_code=400, detail="transcript is required")
+    if not body.question.strip():
+        raise HTTPException(status_code=400, detail="question is required")
+
+    filler_count = count_fillers(body.transcript)
+    wpm = compute_wpm(body.transcript, body.duration_seconds) if body.duration_seconds else 0
+
+    result = score_system_design_response(question=body.question, transcript=body.transcript)
+    result["filler_word_count"] = filler_count
+    result["words_per_minute"] = wpm
+    return result
 
 
 @router.post("", response_model=ScoreResponse)

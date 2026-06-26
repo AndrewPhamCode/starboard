@@ -5,6 +5,7 @@ import QuestionBank from './pages/QuestionBank'
 import InterviewSession from './pages/InterviewSession'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
+import Profile from './pages/Profile'
 
 const LeetCodeSession = lazy(() => import('./pages/LeetCodeSession'))
 
@@ -26,6 +27,7 @@ function App() {
           </Suspense>
         } />
         <Route path="/practice/:type/session" element={<InterviewSession />} />
+        <Route path="/profile" element={<Profile />} />
         <Route path="/practice" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

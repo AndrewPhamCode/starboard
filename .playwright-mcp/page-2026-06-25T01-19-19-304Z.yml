@@ -1,0 +1,56 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - link "Back" [ref=e6] [cursor=pointer]:
+        - /url: /
+        - img [ref=e7]
+        - text: Back
+      - button "Previous mode" [ref=e10] [cursor=pointer]:
+        - img [ref=e11]
+      - generic [ref=e13]: Technical
+      - button "Next mode" [ref=e14] [cursor=pointer]:
+        - img [ref=e15]
+  - generic [ref=e18]:
+    - generic [ref=e19]:
+      - heading "Practice technical interviews" [level=1] [ref=e20]
+      - paragraph [ref=e21]: System design, debugging, and architecture questions scored on clarity, depth, and structure.
+    - generic [ref=e23]:
+      - paragraph [ref=e24]: SEARCH BY COMPANY
+      - generic [ref=e25]:
+        - textbox "e.g. Google, Amazon, Stripe…" [ref=e26]
+        - button "Search" [disabled] [ref=e27] [cursor=pointer]
+      - generic [ref=e28]:
+        - button "Google" [ref=e29] [cursor=pointer]
+        - button "Amazon" [ref=e30] [cursor=pointer]
+        - button "Meta" [ref=e31] [cursor=pointer]
+        - button "Microsoft" [ref=e32] [cursor=pointer]
+        - button "Apple" [ref=e33] [cursor=pointer]
+        - button "Stripe" [ref=e34] [cursor=pointer]
+        - button "Airbnb" [ref=e35] [cursor=pointer]
+        - button "Uber" [ref=e36] [cursor=pointer]
+    - generic [ref=e37]:
+      - paragraph [ref=e38]: ROLE
+      - generic [ref=e39]:
+        - button "All" [ref=e40] [cursor=pointer]
+        - button "Backend" [ref=e41] [cursor=pointer]
+        - button "Full Stack" [ref=e42] [cursor=pointer]
+        - button "AI / ML" [ref=e43] [cursor=pointer]
+        - button "Cloud / AWS" [ref=e44] [cursor=pointer]
+        - button "Frontend" [ref=e45] [cursor=pointer]
+    - generic [ref=e46]:
+      - paragraph [ref=e47]: DIFFICULTY
+      - generic [ref=e48]:
+        - button "Intern" [ref=e49] [cursor=pointer]
+        - button "Mid-level" [ref=e50] [cursor=pointer]
+        - button "Senior" [ref=e51] [cursor=pointer]
+    - paragraph [ref=e53]: "Tip: Start with clarifying questions, then walk through trade-offs before committing to a design."
+    - generic [ref=e54]:
+      - generic [ref=e55]: debugging
+      - paragraph [ref=e56]: How would you approach debugging a microservice that is intermittently returning 5xx errors in production with no obvious pattern?
+    - generic [ref=e57]:
+      - button "Start interview" [ref=e58] [cursor=pointer]:
+        - img [ref=e59]
+        - text: Start interview
+      - button "New question" [ref=e61] [cursor=pointer]:
+        - img [ref=e62]
+    - paragraph [ref=e64]: 20 questions available

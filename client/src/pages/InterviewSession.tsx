@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import type { ScoreResult } from '../components/StarScoreCard'
 import StarScoreCard from '../components/StarScoreCard'
+import type { DesignScoreResult } from '../components/DesignScoreCard'
+import DesignScoreCard from '../components/DesignScoreCard'
 import { supabase } from '../lib/supabase'
 import { API_URL } from '../lib/api'
 
@@ -245,7 +247,11 @@ function useRecorder() {
 
   function getStream() { return cachedStreamRef.current }
 
-  return { acquireMic, startRecording, stopRecording, releaseMic, getStream }
+  function muteAudio(muted: boolean): void {
+    cachedStreamRef.current?.getAudioTracks().forEach(t => { t.enabled = !muted })
+  }
+
+  return { acquireMic, startRecording, stopRecording, releaseMic, getStream, muteAudio }
 }
 
 /* ─── Live caption hook (SpeechRecognition, Chrome/Edge only) ───────────── */
@@ -421,11 +427,15 @@ function AvatarIllustration() {
 }
 
 /* ─── User camera pip — draggable, resizable, speaking indicator ─────────── */
-function UserCamera({ isSpeaking }: { isSpeaking: boolean }) {
+function UserCamera({ isSpeaking, cameraOn }: { isSpeaking: boolean; cameraOn: boolean }) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
 
   const [available, setAvailable] = useState(true)
+
+  useEffect(() => {
+    streamRef.current?.getVideoTracks().forEach(t => { t.enabled = cameraOn })
+  }, [cameraOn])
 
   // Position and size — initialized to bottom-right
   const [pos, setPos] = useState(() => ({ x: window.innerWidth - 180, y: window.innerHeight - 72 - 140 }))
@@ -520,13 +530,22 @@ function UserCamera({ isSpeaking }: { isSpeaking: boolean }) {
     >
       {available
         ? (
-          <video
-            ref={videoRef}
-            autoPlay
-            muted
-            playsInline
-            style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)', display: 'block' }}
-          />
+          <>
+            <video
+              ref={videoRef}
+              autoPlay
+              muted
+              playsInline
+              style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)', display: 'block' }}
+            />
+            {!cameraOn && (
+              <div style={{ position: 'absolute', inset: 0, background: '#111827', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4b5563" strokeWidth="2">
+                  <line x1="2" y1="2" x2="22" y2="22" /><path d="M10.68 10.68A2 2 0 0 0 10 12a2 2 0 0 0 2 2 2 2 0 0 0 1.32-.68" /><path d="M16.73 16.73A9.87 9.87 0 0 1 12 18c-5 0-9-4-9-8a9.6 9.6 0 0 1 2.27-4.73" /><path d="M6.61 6.61A9.6 9.6 0 0 0 3 10c0 4 4 8 9 8a9.87 9.87 0 0 0 4.73-1.27" />
+                </svg>
+              </div>
+            )}
+          </>
         ) : (
           <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <span style={{ color: '#6b7280', fontSize: 12, textAlign: 'center', padding: '0 8px' }}>Camera unavailable</span>
@@ -627,11 +646,24 @@ export default function InterviewSession() {
   const [transcript1, setTranscript1] = useState('')
   const [transcript2, setTranscript2] = useState('')
   const [duration1, setDuration1] = useState(0)
-  const [score, setScore] = useState<ScoreResult | null>(null)
+  const isSystemDesign = type === 'system-design'
+  const [score, setScore] = useState<ScoreResult | DesignScoreResult | null>(null)
   const [error, setError] = useState('')
 
-  const { acquireMic, startRecording, stopRecording, releaseMic, getStream } = useRecorder()
+  const { acquireMic, startRecording, stopRecording, releaseMic, getStream, muteAudio } = useRecorder()
   const isRecording = sessionState === 'recording_1' || sessionState === 'recording_2'
+  const [isMuted, setIsMuted] = useState(false)
+  const [cameraOn, setCameraOn] = useState(true)
+
+  function toggleMute() {
+    const next = !isMuted
+    setIsMuted(next)
+    muteAudio(next)
+  }
+
+  function toggleCamera() {
+    setCameraOn(v => !v)
+  }
   const timer = useTimer(isRecording)
   const caption = useLiveCaption(isRecording)
 
@@ -731,17 +763,21 @@ export default function InterviewSession() {
 
       setSessionState('scoring')
 
-      const scoreRes = await fetch(`${API_URL}/api/score`, {
+      const scoreEndpoint = isSystemDesign ? `${API_URL}/api/score/system-design` : `${API_URL}/api/score`
+      const scorePayload = isSystemDesign
+        ? { question: q.text, transcript: transcript1, duration_seconds: duration1 || null }
+        : {
+            question: q.text,
+            transcript: transcript1,
+            follow_up_question: followUpQuestion || null,
+            follow_up_transcript: followUpTranscript || null,
+            duration_seconds: duration1 || null,
+            follow_up_duration_seconds: duration || null,
+          }
+      const scoreRes = await fetch(scoreEndpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          question: q.text,
-          transcript: transcript1,
-          follow_up_question: followUpQuestion || null,
-          follow_up_transcript: followUpTranscript || null,
-          duration_seconds: duration1 || null,
-          follow_up_duration_seconds: duration || null,
-        }),
+        body: JSON.stringify(scorePayload),
       })
       if (!scoreRes.ok) throw new Error(await apiError(scoreRes))
       const result = await scoreRes.json()
@@ -823,7 +859,10 @@ export default function InterviewSession() {
             )}
           </div>
 
-          <StarScoreCard result={score} />
+          {isSystemDesign
+            ? <DesignScoreCard result={score as DesignScoreResult} />
+            : <StarScoreCard result={score as ScoreResult} />
+          }
         </div>
       </div>
     )
@@ -968,7 +1007,7 @@ export default function InterviewSession() {
           </div>
         )}
 
-        <UserCamera isSpeaking={isRecording && caption.length > 0} />
+        <UserCamera isSpeaking={isRecording && caption.length > 0} cameraOn={cameraOn} />
       </div>
 
       {/* ── Bottom toolbar ── */}
@@ -984,29 +1023,38 @@ export default function InterviewSession() {
           </button>
         ) : (
           <>
-            {/* Mic / Stop */}
+            {/* Mic mute toggle */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
               <button
-                onClick={isRecording ? (sessionState === 'recording_1' ? stopAnswer1 : stopAnswer2) : undefined}
-                style={{ width: 48, height: 48, borderRadius: '50%', background: isRecording ? '#ef4444' : '#232630', border: 'none', cursor: isRecording ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.2s', boxShadow: isRecording ? '0 0 0 3px rgba(239,68,68,0.25)' : 'none' }}
+                onClick={isRecording ? (sessionState === 'recording_1' ? stopAnswer1 : stopAnswer2) : toggleMute}
+                style={{ width: 48, height: 48, borderRadius: '50%', background: isRecording ? '#ef4444' : isMuted ? '#374151' : '#232630', border: isMuted && !isRecording ? '2px solid #ef4444' : 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.2s', boxShadow: isRecording ? '0 0 0 3px rgba(239,68,68,0.25)' : 'none' }}
               >
                 {isRecording ? (
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><rect x="4" y="4" width="16" height="16" rx="3"/></svg>
+                ) : isMuted ? (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round"><line x1="2" y1="2" x2="22" y2="22"/><path d="M18.89 13.23A7.12 7.12 0 0 0 19 12h-2a5.12 5.12 0 0 1-.06.74M5 10v2a7 7 0 0 0 11.29 5.53M15 9.34V5a3 3 0 0 0-5.68-1.33M9 9v3a3 3 0 0 0 5.12 2.12M12 19v3M8 23h8"/></svg>
                 ) : (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="#6b7280"><path d="M12 1a4 4 0 014 4v6a4 4 0 01-8 0V5a4 4 0 014-4zm-1 17.93V21h-2v2h6v-2h-2v-2.07A8.001 8.001 0 0020 11h-2a6 6 0 01-12 0H4a8.001 8.001 0 017 6.93z"/></svg>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="#9ca3af"><path d="M12 1a4 4 0 014 4v6a4 4 0 01-8 0V5a4 4 0 014-4zm-1 17.93V21h-2v2h6v-2h-2v-2.07A8.001 8.001 0 0020 11h-2a6 6 0 01-12 0H4a8.001 8.001 0 017 6.93z"/></svg>
                 )}
               </button>
-              <span style={{ color: silenceCountdown !== null ? '#f97316' : '#6b7280', fontSize: '0.65rem' }}>
-                {silenceCountdown !== null ? `${silenceCountdown}s…` : isRecording ? 'Stop' : 'Mic'}
+              <span style={{ color: isRecording ? '#ef4444' : isMuted ? '#ef4444' : '#6b7280', fontSize: '0.65rem' }}>
+                {silenceCountdown !== null ? `${silenceCountdown}s…` : isRecording ? 'Stop' : isMuted ? 'Unmute' : 'Mute'}
               </span>
             </div>
 
-            {/* Camera */}
+            {/* Camera toggle */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-              <button style={{ width: 48, height: 48, borderRadius: '50%', background: '#232630', border: 'none', cursor: 'default', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+              <button
+                onClick={toggleCamera}
+                style={{ width: 48, height: 48, borderRadius: '50%', background: cameraOn ? '#232630' : '#374151', border: cameraOn ? 'none' : '2px solid #ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.2s' }}
+              >
+                {cameraOn ? (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+                ) : (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round"><line x1="2" y1="2" x2="22" y2="22"/><path d="M16 16H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h3"/><path d="M22.5 8.5L19 12l3.5 3.5V8.5z"/></svg>
+                )}
               </button>
-              <span style={{ color: '#6b7280', fontSize: '0.65rem' }}>Camera</span>
+              <span style={{ color: cameraOn ? '#6b7280' : '#ef4444', fontSize: '0.65rem' }}>{cameraOn ? 'Camera' : 'Off'}</span>
             </div>
 
             {/* Processing indicator */}

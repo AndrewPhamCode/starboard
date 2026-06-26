@@ -1,0 +1,52 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - link "Back" [ref=e6] [cursor=pointer]:
+        - /url: /
+        - img [ref=e7]
+        - text: Back
+      - button "Previous mode" [ref=e10] [cursor=pointer]:
+        - img [ref=e11]
+      - generic [ref=e13]: System Design
+      - button "Next mode" [ref=e14] [cursor=pointer]:
+        - img [ref=e15]
+  - generic [ref=e18]:
+    - generic [ref=e19]:
+      - heading "Ace system design rounds" [level=1] [ref=e20]
+      - paragraph [ref=e21]: Practice open-ended architecture questions scored on clarity, depth, trade-offs, and scalability thinking.
+    - generic [ref=e23]:
+      - paragraph [ref=e24]: SEARCH BY COMPANY
+      - generic [ref=e25]:
+        - textbox "e.g. Google, Amazon, Stripe…" [ref=e26]
+        - button "Search" [disabled] [ref=e27] [cursor=pointer]
+      - generic [ref=e28]:
+        - button "Google" [ref=e29] [cursor=pointer]
+        - button "Amazon" [ref=e30] [cursor=pointer]
+        - button "Meta" [ref=e31] [cursor=pointer]
+        - button "Microsoft" [ref=e32] [cursor=pointer]
+        - button "Apple" [ref=e33] [cursor=pointer]
+        - button "Stripe" [ref=e34] [cursor=pointer]
+        - button "Airbnb" [ref=e35] [cursor=pointer]
+        - button "Uber" [ref=e36] [cursor=pointer]
+    - generic [ref=e37]:
+      - paragraph [ref=e38]: CATEGORY
+      - button "All categories" [ref=e40] [cursor=pointer]:
+        - generic [ref=e41]: All categories
+        - img [ref=e42]
+    - generic [ref=e44]:
+      - paragraph [ref=e45]: DIFFICULTY
+      - generic [ref=e46]:
+        - button "Intern" [ref=e47] [cursor=pointer]
+        - button "Mid-level" [ref=e48] [cursor=pointer]
+        - button "Senior" [ref=e49] [cursor=pointer]
+    - paragraph [ref=e51]: "Tip: Always start by clarifying scope, users, and scale before jumping into a solution."
+    - generic [ref=e52]:
+      - generic [ref=e53]: scalability
+      - paragraph [ref=e54]: Design a URL shortener like bit.ly. Walk through the high-level architecture, how you'd generate short codes, handle redirects at high throughput, and what you'd cache and where.
+    - generic [ref=e55]:
+      - button "Start interview" [ref=e56] [cursor=pointer]:
+        - img [ref=e57]
+        - text: Start interview
+      - button "New question" [ref=e59] [cursor=pointer]:
+        - img [ref=e60]
+    - paragraph [ref=e62]: 6 questions available

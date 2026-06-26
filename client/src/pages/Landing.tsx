@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 
@@ -89,6 +89,21 @@ const MODES = [
     icon: (
       <svg width="18" height="18" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" d="M14.25 9.75L16.5 12l-2.25 2.25m-4.5 0L7.5 12l2.25-2.25M6 20.25h12A2.25 2.25 0 0020.25 18V6A2.25 2.25 0 0018 3.75H6A2.25 2.25 0 003.75 6v12A2.25 2.25 0 006 20.25z" />
+      </svg>
+    ),
+  },
+  {
+    title: 'System Design',
+    desc: 'Architect distributed systems, databases, and APIs under real interview pressure.',
+    count: '18 prompts',
+    href: '/practice/system-design',
+    accent: '#f97316',
+    accentBg: 'rgba(249,115,22,0.08)',
+    accentBorder: 'rgba(249,115,22,0.4)',
+    accentGlow: 'rgba(249,115,22,0.15)',
+    icon: (
+      <svg width="18" height="18" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15a4.5 4.5 0 004.5 4.5H18a3.75 3.75 0 001.332-7.257 3 3 0 00-3.758-3.848 5.25 5.25 0 00-10.233 2.33A4.502 4.502 0 002.25 15z" />
       </svg>
     ),
   },
@@ -185,6 +200,21 @@ const DEMO_SLIDES: DemoSlide[] = [
     accent: '#10b981',
     soon: true,
   },
+  {
+    mode: 'System Design',
+    question: 'Design a URL shortener that handles 100M redirects per day.',
+    overall: 4,
+    bars: [
+      { label: 'Clarification', score: 5, color: '#f97316' },
+      { label: 'Design',        score: 4, color: '#fb923c' },
+      { label: 'Deep Dive',     score: 4, color: '#fdba74' },
+      { label: 'Trade-offs',    score: 3, color: '#f97316' },
+      { label: 'Scalability',   score: 4, color: '#fb923c' },
+      { label: 'Communication', score: 4, color: '#fdba74' },
+    ],
+    note: "Strong clarification and component coverage. Dig deeper on the trade-off between hash collision strategies and add a CDN layer for redirect latency.",
+    accent: '#f97316',
+  },
 ]
 
 /* ─── Page ───────────────────────────────────────────────────────────────────── */
@@ -194,6 +224,17 @@ export default function Landing() {
   const [hoveredMode, setHoveredMode] = useState<number | null>(null)
   const [demoIdx, setDemoIdx] = useState(0)
   const touchStartX = useRef<number | null>(null)
+  const [profileOpen, setProfileOpen] = useState(false)
+  const profileRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!profileOpen) return
+    function handleClick(e: MouseEvent) {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) setProfileOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [profileOpen])
 
   function prevDemo() { setDemoIdx(i => (i - 1 + DEMO_SLIDES.length) % DEMO_SLIDES.length) }
   function nextDemo() { setDemoIdx(i => (i + 1) % DEMO_SLIDES.length) }
@@ -223,6 +264,7 @@ export default function Landing() {
     >
       {/* ── Navbar ───────────────────────────────────────────────────────────── */}
       <nav
+        className="hero-animate-fade"
         style={{
           position: 'sticky',
           top: 0,
@@ -231,6 +273,7 @@ export default function Landing() {
           background: 'rgba(12,12,14,0.85)',
           backdropFilter: 'blur(12px)',
           WebkitBackdropFilter: 'blur(12px)',
+          animationDelay: '0ms',
         }}
       >
         <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 24px', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -259,29 +302,84 @@ export default function Landing() {
 
           {/* Auth CTA */}
           {user ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div ref={profileRef} style={{ position: 'relative' }}>
               <button
-                onClick={() => navigate('/dashboard')}
-                style={{ padding: '7px 16px', borderRadius: 8, border: '1px solid #2a2a2e', background: 'transparent', color: '#a1a1aa', fontSize: '0.85rem', fontWeight: 500, cursor: 'pointer', fontFamily: "'Inter', system-ui, sans-serif", transition: 'all 0.15s' }}
-                onMouseEnter={e => { e.currentTarget.style.color = '#f0f0f0'; e.currentTarget.style.borderColor = '#52525b' }}
-                onMouseLeave={e => { e.currentTarget.style.color = '#a1a1aa'; e.currentTarget.style.borderColor = '#2a2a2e' }}
-              >
-                Dashboard
-              </button>
-              <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(124,58,237,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#a78bfa', fontWeight: 700, fontSize: '0.68rem', fontFamily: "'JetBrains Mono', monospace", cursor: 'pointer' }}
-                onClick={() => navigate('/dashboard')}
-                title={user.email}
+                onClick={() => setProfileOpen(o => !o)}
+                title={user.email ?? undefined}
+                style={{
+                  width: 34, height: 34, borderRadius: '50%',
+                  background: profileOpen ? 'rgba(124,58,237,0.25)' : 'rgba(124,58,237,0.15)',
+                  border: `1px solid ${profileOpen ? 'rgba(124,58,237,0.6)' : 'rgba(124,58,237,0.35)'}`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: '#a78bfa', fontWeight: 700, fontSize: '0.68rem',
+                  fontFamily: "'JetBrains Mono', monospace", cursor: 'pointer',
+                  transition: 'all 0.15s',
+                }}
               >
                 {(user.email ?? 'U').slice(0, 2).toUpperCase()}
-              </div>
-              <button
-                onClick={() => signOut().then(() => navigate('/'))}
-                style={{ background: 'none', border: 'none', color: '#52525b', fontSize: '0.8rem', cursor: 'pointer', fontFamily: "'Inter', system-ui, sans-serif", padding: '4px 2px', transition: 'color 0.15s' }}
-                onMouseEnter={e => { e.currentTarget.style.color = '#a1a1aa' }}
-                onMouseLeave={e => { e.currentTarget.style.color = '#52525b' }}
-              >
-                Sign out
               </button>
+
+              {profileOpen && (
+                <div style={{
+                  position: 'absolute', top: 'calc(100% + 10px)', right: 0,
+                  background: '#141416', border: '1px solid #2a2a2e', borderRadius: 10,
+                  minWidth: 200, boxShadow: '0 8px 32px rgba(0,0,0,0.5)', zIndex: 100,
+                  overflow: 'hidden',
+                }}>
+                  {/* User info header */}
+                  <div style={{ padding: '12px 16px', borderBottom: '1px solid #2a2a2e' }}>
+                    <p style={{ margin: 0, fontSize: '0.75rem', color: '#52525b', fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.05em' }}>SIGNED IN AS</p>
+                    <p style={{ margin: '3px 0 0', fontSize: '0.82rem', color: '#a1a1aa', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</p>
+                  </div>
+
+                  {/* Menu items */}
+                  {[
+                    { label: 'Profile', icon: 'M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z', action: () => { navigate('/profile'); setProfileOpen(false) } },
+                    { label: 'Dashboard', icon: 'M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z', action: () => { navigate('/dashboard'); setProfileOpen(false) } },
+                    { label: 'Settings', icon: 'M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z M15 12a3 3 0 11-6 0 3 3 0 016 0z', action: () => { navigate('/profile'); setProfileOpen(false) } },
+                  ].map(item => (
+                    <button
+                      key={item.label}
+                      onClick={item.action}
+                      style={{
+                        width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+                        padding: '10px 16px', background: 'none', border: 'none',
+                        color: '#a1a1aa', fontSize: '0.875rem', fontWeight: 500,
+                        cursor: 'pointer', fontFamily: "'Inter', system-ui, sans-serif",
+                        textAlign: 'left', transition: 'background 0.1s, color 0.1s',
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.background = '#1c1c1f'; e.currentTarget.style.color = '#f0f0f0' }}
+                      onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = '#a1a1aa' }}
+                    >
+                      <svg width="15" height="15" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" style={{ flexShrink: 0 }}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
+                      </svg>
+                      {item.label}
+                    </button>
+                  ))}
+
+                  {/* Sign out */}
+                  <div style={{ borderTop: '1px solid #2a2a2e', padding: '6px' }}>
+                    <button
+                      onClick={() => signOut().then(() => navigate('/'))}
+                      style={{
+                        width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+                        padding: '8px 10px', background: 'none', border: 'none', borderRadius: 6,
+                        color: '#6b6b7a', fontSize: '0.875rem', fontWeight: 500,
+                        cursor: 'pointer', fontFamily: "'Inter', system-ui, sans-serif",
+                        textAlign: 'left', transition: 'background 0.1s, color 0.1s',
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.08)'; e.currentTarget.style.color = '#f87171' }}
+                      onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = '#6b6b7a' }}
+                    >
+                      <svg width="15" height="15" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" style={{ flexShrink: 0 }}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+                      </svg>
+                      Sign out
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <button
@@ -324,6 +422,7 @@ export default function Landing() {
         <div style={{ position: 'relative', zIndex: 1, maxWidth: 680 }}>
           {/* Eyebrow */}
           <div
+            className="hero-animate"
             style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -333,6 +432,7 @@ export default function Landing() {
               borderRadius: 100,
               background: 'rgba(6,182,212,0.06)',
               marginBottom: 32,
+              animationDelay: '0ms',
             }}
           >
             <span style={{ color: '#06b6d4', fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.12em', fontFamily: "'JetBrains Mono', monospace" }}>
@@ -342,6 +442,7 @@ export default function Landing() {
 
           {/* Headline */}
           <h1
+            className="hero-animate"
             style={{
               fontFamily: "'Space Grotesk', system-ui, sans-serif",
               fontSize: 'clamp(2.8rem, 8vw, 5rem)',
@@ -350,6 +451,7 @@ export default function Landing() {
               letterSpacing: '-0.03em',
               color: '#f0f0f0',
               margin: '0 0 20px',
+              animationDelay: '90ms',
             }}
           >
             Ace every<br />
@@ -358,19 +460,21 @@ export default function Landing() {
 
           {/* Subline */}
           <p
+            className="hero-animate"
             style={{
               color: '#6b6b7a',
               fontSize: '1.05rem',
               lineHeight: 1.65,
               maxWidth: 480,
               margin: '0 auto 40px',
+              animationDelay: '180ms',
             }}
           >
             Practice with an AI interviewer that listens, challenges, and scores your answers in real time.
           </p>
 
           {/* CTAs */}
-          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 56 }}>
+          <div className="hero-animate" style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 56, animationDelay: '270ms' }}>
             <button
               onClick={scrollToModes}
               style={{
@@ -417,7 +521,7 @@ export default function Landing() {
           </div>
 
           {/* Stat badges */}
-          <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+          <div className="hero-animate" style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap', animationDelay: '360ms' }}>
             {[
               { value: '32+', label: 'questions' },
               { value: '4', label: 'interview modes' },
@@ -580,7 +684,7 @@ export default function Landing() {
                   padding: '5px 14px',
                   borderRadius: 100,
                   border: `1px solid ${i === demoIdx ? s.accent : '#2a2a2e'}`,
-                  background: i === demoIdx ? `rgba(${s.accent === '#7c3aed' ? '124,58,237' : s.accent === '#06b6d4' ? '6,182,212' : s.accent === '#f59e0b' ? '245,158,11' : '16,185,129'},0.15)` : 'transparent',
+                  background: i === demoIdx ? `rgba(${s.accent === '#7c3aed' ? '124,58,237' : s.accent === '#06b6d4' ? '6,182,212' : s.accent === '#f59e0b' ? '245,158,11' : s.accent === '#f97316' ? '249,115,22' : '16,185,129'},0.15)` : 'transparent',
                   color: i === demoIdx ? s.accent : '#52525b',
                   fontSize: '0.8rem',
                   fontWeight: 600,
@@ -633,7 +737,7 @@ export default function Landing() {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
                   <div>
                     <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.65rem', letterSpacing: '0.1em', color: '#52525b', marginBottom: 4 }}>
-                      AI FEEDBACK · STAR SCORE
+                      AI FEEDBACK · {slide.mode === 'System Design' ? 'DESIGN SCORE' : 'STAR SCORE'}
                     </p>
                     <p style={{ fontFamily: "'Space Grotesk', system-ui, sans-serif", fontWeight: 600, fontSize: '1rem', color: '#f0f0f0', margin: 0 }}>
                       {slide.mode} Interview
@@ -642,7 +746,7 @@ export default function Landing() {
                   <div style={{
                     width: 56, height: 56, borderRadius: 12, flexShrink: 0,
                     border: `1px solid ${slide.accent}40`,
-                    background: `rgba(${slide.accent === '#7c3aed' ? '124,58,237' : slide.accent === '#06b6d4' ? '6,182,212' : slide.accent === '#f59e0b' ? '245,158,11' : '16,185,129'},0.1)`,
+                    background: `rgba(${slide.accent === '#7c3aed' ? '124,58,237' : slide.accent === '#06b6d4' ? '6,182,212' : slide.accent === '#f59e0b' ? '245,158,11' : slide.accent === '#f97316' ? '249,115,22' : '16,185,129'},0.1)`,
                     display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                   }}>
                     <span style={{ fontFamily: "'Space Grotesk', system-ui, sans-serif", fontWeight: 700, fontSize: '1.6rem', color: '#f0f0f0', lineHeight: 1 }}>{slide.overall}</span>

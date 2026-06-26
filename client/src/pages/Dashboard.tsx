@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
@@ -182,6 +182,17 @@ export default function Dashboard() {
   const [sessions, setSessions] = useState<Session[]>([])
   const [loadingSessions, setLoadingSessions] = useState(true)
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [profileOpen, setProfileOpen] = useState(false)
+  const profileRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!profileOpen) return
+    function handleClick(e: MouseEvent) {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) setProfileOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [profileOpen])
 
   useEffect(() => {
     if (!authLoading && !user) navigate('/login', { replace: true })
@@ -258,12 +269,84 @@ export default function Dashboard() {
             onMouseEnter={e => { e.currentTarget.style.color = ds.text; e.currentTarget.style.borderColor = '#52525b' }}
             onMouseLeave={e => { e.currentTarget.style.color = ds.muted; e.currentTarget.style.borderColor = ds.border }}
           >Practice</button>
-          <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(124,58,237,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#a78bfa', fontWeight: 700, fontSize: '0.7rem', fontFamily: "'JetBrains Mono', monospace" }}>
-            {initials(user!.email ?? 'U')}
+
+          {/* Profile dropdown */}
+          <div ref={profileRef} style={{ position: 'relative' }}>
+            <button
+              onClick={() => setProfileOpen(o => !o)}
+              title={user!.email ?? undefined}
+              style={{
+                width: 32, height: 32, borderRadius: '50%',
+                background: profileOpen ? 'rgba(124,58,237,0.25)' : 'rgba(124,58,237,0.15)',
+                border: `1px solid ${profileOpen ? 'rgba(124,58,237,0.6)' : 'rgba(124,58,237,0.3)'}`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: '#a78bfa', fontWeight: 700, fontSize: '0.7rem',
+                fontFamily: "'JetBrains Mono', monospace", cursor: 'pointer',
+                transition: 'all 0.15s',
+              }}
+            >
+              {initials(user!.email ?? 'U')}
+            </button>
+
+            {profileOpen && (
+              <div style={{
+                position: 'absolute', top: 'calc(100% + 10px)', right: 0,
+                background: '#141416', border: '1px solid #2a2a2e', borderRadius: 10,
+                minWidth: 200, boxShadow: '0 8px 32px rgba(0,0,0,0.5)', zIndex: 100,
+                overflow: 'hidden',
+              }}>
+                <div style={{ padding: '12px 16px', borderBottom: '1px solid #2a2a2e' }}>
+                  <p style={{ margin: 0, fontSize: '0.65rem', color: '#52525b', fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.1em' }}>SIGNED IN AS</p>
+                  <p style={{ margin: '3px 0 0', fontSize: '0.82rem', color: '#a1a1aa', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user!.email}</p>
+                </div>
+
+                {[
+                  { label: 'Profile', icon: 'M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z', action: () => { navigate('/profile'); setProfileOpen(false) } },
+                  { label: 'Dashboard', icon: 'M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z', action: () => { navigate('/dashboard'); setProfileOpen(false) } },
+                  { label: 'Settings', icon: 'M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z M15 12a3 3 0 11-6 0 3 3 0 016 0z', action: () => { navigate('/profile'); setProfileOpen(false) } },
+                ].map(item => (
+                  <button
+                    key={item.label}
+                    onClick={item.action}
+                    style={{
+                      width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+                      padding: '10px 16px', background: 'none', border: 'none',
+                      color: '#a1a1aa', fontSize: '0.875rem', fontWeight: 500,
+                      cursor: 'pointer', fontFamily: "'Inter', system-ui, sans-serif",
+                      textAlign: 'left', transition: 'background 0.1s, color 0.1s',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = '#1c1c1f'; e.currentTarget.style.color = '#f0f0f0' }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = '#a1a1aa' }}
+                  >
+                    <svg width="15" height="15" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" style={{ flexShrink: 0 }}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
+                    </svg>
+                    {item.label}
+                  </button>
+                ))}
+
+                <div style={{ borderTop: '1px solid #2a2a2e', padding: '6px' }}>
+                  <button
+                    onClick={() => supabase.auth.signOut().then(() => navigate('/'))}
+                    style={{
+                      width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+                      padding: '8px 10px', background: 'none', border: 'none', borderRadius: 6,
+                      color: '#6b6b7a', fontSize: '0.875rem', fontWeight: 500,
+                      cursor: 'pointer', fontFamily: "'Inter', system-ui, sans-serif",
+                      textAlign: 'left', transition: 'background 0.1s, color 0.1s',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.08)'; e.currentTarget.style.color = '#f87171' }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = '#6b6b7a' }}
+                  >
+                    <svg width="15" height="15" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" style={{ flexShrink: 0 }}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+                    </svg>
+                    Sign out
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
-          <button onClick={() => supabase.auth.signOut().then(() => navigate('/'))} style={{ background: 'none', border: 'none', color: ds.muted, fontSize: '0.82rem', cursor: 'pointer', fontFamily: "'Inter', system-ui, sans-serif" }}>
-            Sign out
-          </button>
         </div>
       </header>
 

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useParams, Navigate, useNavigate } from 'react-router-dom'
+import { supabase } from '../lib/supabase'
 import { API_URL } from '../lib/api'
 
 interface Question {
@@ -11,7 +12,7 @@ interface Question {
   text: string
 }
 
-type InterviewType = 'behavioral' | 'technical' | 'resume' | 'leetcode'
+type InterviewType = 'behavioral' | 'technical' | 'resume' | 'leetcode' | 'system-design'
 
 const TYPE_CONFIG: Record<InterviewType, {
   label: string
@@ -72,6 +73,17 @@ const TYPE_CONFIG: Record<InterviewType, {
     accent: '#10b981',
     showCategories: false,
   },
+  'system-design': {
+    label: 'System Design',
+    headline: 'Ace system design rounds',
+    subheading: 'Practice open-ended architecture questions scored on clarity, depth, trade-offs, and scalability thinking.',
+    tip: 'Always start by clarifying scope, users, and scale before jumping into a solution.',
+    accent: '#f97316',
+    showCategories: true,
+    categories: ['scalability', 'databases', 'caching', 'api-design', 'microservices', 'distributed-systems'],
+    showCompanySearch: true,
+    showDifficulty: true,
+  },
 }
 
 interface LeetCodeProblem {
@@ -88,7 +100,7 @@ interface LeetCodeProblem {
   starter_code: { python: string; javascript: string; java: string; cpp: string }
 }
 
-const VALID_TYPES: InterviewType[] = ['behavioral', 'technical', 'resume', 'leetcode']
+const VALID_TYPES: InterviewType[] = ['behavioral', 'technical', 'resume', 'leetcode', 'system-design']
 
 function pickRandom<T>(arr: T[]): T | null {
   if (!arr.length) return null
@@ -427,6 +439,19 @@ function PracticeView({
   cfg: (typeof TYPE_CONFIG)[InterviewType]
 }) {
   const navigate = useNavigate()
+  const touchStartX = useRef<number | null>(null)
+  const currentIdx = VALID_TYPES.indexOf(interviewType)
+  function goType(dir: 1 | -1) {
+    const next = VALID_TYPES[(currentIdx + dir + VALID_TYPES.length) % VALID_TYPES.length]
+    navigate(`/practice/${next}`, { replace: true })
+  }
+  function onTouchStart(e: React.TouchEvent) { touchStartX.current = e.touches[0].clientX }
+  function onTouchEnd(e: React.TouchEvent) {
+    if (touchStartX.current === null) return
+    const dx = e.changedTouches[0].clientX - touchStartX.current
+    if (Math.abs(dx) > 48) goType(dx < 0 ? 1 : -1)
+    touchStartX.current = null
+  }
   const [category, setCategory] = useState('')
   const [role, setRole] = useState('general')
   const [difficulty, setDifficulty] = useState('mid')
@@ -446,7 +471,31 @@ function PracticeView({
   const [dragOver, setDragOver] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  const [savedResumeUrl, setSavedResumeUrl] = useState<string | null>(null)
+  const [_savedResumeChecked] = useState(true) // kept for future use; upload zone shows immediately
+  const [showUploadZone, setShowUploadZone] = useState(false)
+
   const { accent } = cfg
+
+  // Silently check for saved resume — upload zone shows immediately, notice replaces it if found
+  useEffect(() => {
+    if (interviewType !== 'resume') return
+    supabase.auth.getUser().then(async ({ data }) => {
+      try {
+        if (!data.user) return
+        const { data: urlData, error } = await supabase.storage
+          .from('resumes')
+          .createSignedUrl(`${data.user.id}/resume.pdf`, 3600)
+        if (error || !urlData?.signedUrl) return
+        setSavedResumeUrl(urlData.signedUrl)
+        const blob = await fetch(urlData.signedUrl).then(r => r.blob())
+        const file = new File([blob], 'saved-resume.pdf', { type: 'application/pdf' })
+        handleResumeUpload(file)
+      } catch {
+        // Silently fall back — upload zone is already visible
+      }
+    }).catch(() => {})
+  }, [interviewType])
 
   useEffect(() => {
     if (interviewType === 'leetcode' || interviewType === 'resume') { setLoading(false); return }
@@ -533,7 +582,11 @@ function PracticeView({
   const tip = cfg.showRoles && cfg.roleTips ? (cfg.roleTips[role] ?? cfg.tip) : cfg.tip
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0c0c0e', fontFamily: "'Inter', system-ui, sans-serif" }}>
+    <div
+      style={{ minHeight: '100vh', background: '#0c0c0e', fontFamily: "'Inter', system-ui, sans-serif" }}
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
+    >
 
       {/* Header */}
       <header style={{
@@ -567,9 +620,34 @@ function PracticeView({
             Back
           </Link>
           <div style={{ width: 1, height: 16, background: '#2a2a2e' }} />
-          <span style={{ fontFamily: "'Space Grotesk', system-ui, sans-serif", fontWeight: 600, fontSize: '0.9rem', color: '#f0f0f0' }}>
+
+          {/* Type switcher */}
+          <button
+            onClick={() => goType(-1)}
+            title="Previous mode"
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px 2px', color: '#52525b', display: 'flex', alignItems: 'center' }}
+            onMouseEnter={e => (e.currentTarget.style.color = '#f0f0f0')}
+            onMouseLeave={e => (e.currentTarget.style.color = '#52525b')}
+          >
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+            </svg>
+          </button>
+          <span style={{ fontFamily: "'Space Grotesk', system-ui, sans-serif", fontWeight: 600, fontSize: '0.9rem', color: '#f0f0f0', minWidth: 100, textAlign: 'center' }}>
             {cfg.label}
           </span>
+          <button
+            onClick={() => goType(1)}
+            title="Next mode"
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px 2px', color: '#52525b', display: 'flex', alignItems: 'center' }}
+            onMouseEnter={e => (e.currentTarget.style.color = '#f0f0f0')}
+            onMouseLeave={e => (e.currentTarget.style.color = '#52525b')}
+          >
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+            </svg>
+          </button>
+
           <div style={{
             marginLeft: 'auto',
             width: 8,
@@ -738,7 +816,39 @@ function PracticeView({
                   style={{ display: 'none' }}
                   onChange={(e) => { const f = e.target.files?.[0]; if (f) handleResumeUpload(f) }}
                 />
-                {!resumeFileName && (
+
+                {/* Saved resume notice */}
+                {savedResumeUrl && !showUploadZone && !resumeFileName && resumeUploading && (
+                  <div style={{ background: '#141416', border: `1px solid #2a2a2e`, borderRadius: 12, padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 0 }}>
+                    <Spinner color={accent} />
+                    <div>
+                      <p style={{ fontWeight: 600, color: '#f0f0f0', fontSize: '0.875rem', margin: '0 0 2px' }}>Loading your saved resume</p>
+                      <p style={{ color: accent, fontSize: '0.78rem', margin: 0 }}>Generating personalized questions…</p>
+                    </div>
+                  </div>
+                )}
+
+                {savedResumeUrl && !showUploadZone && !resumeUploading && !resumeFileName && (
+                  <div style={{ background: '#141416', border: `1px solid ${accent}40`, borderRadius: 12, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ width: 32, height: 32, borderRadius: 8, background: `rgba(16,185,129,0.1)`, border: `1px solid ${accent}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke={accent}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                      </svg>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <p style={{ fontWeight: 600, color: '#f0f0f0', fontSize: '0.875rem', margin: '0 0 1px' }}>Using your saved resume</p>
+                      <p style={{ color: '#6b6b7a', fontSize: '0.75rem', margin: 0 }}>Auto-loaded from your profile</p>
+                    </div>
+                    <button
+                      onClick={() => { setSavedResumeUrl(null); setShowUploadZone(true) }}
+                      style={{ fontSize: '0.78rem', color: '#6b6b7a', cursor: 'pointer', background: 'none', border: 'none', flexShrink: 0, fontFamily: "'Inter', system-ui, sans-serif" }}
+                    >
+                      Change
+                    </button>
+                  </div>
+                )}
+
+                {(!savedResumeUrl || showUploadZone) && !resumeFileName && (
                   <div
                     onClick={() => fileInputRef.current?.click()}
                     onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
