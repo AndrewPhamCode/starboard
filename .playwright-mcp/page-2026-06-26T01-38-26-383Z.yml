@@ -1,0 +1,27 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - link "Back" [ref=e6] [cursor=pointer]:
+        - /url: /
+        - img [ref=e7]
+        - text: Back
+      - button "Previous mode" [ref=e10] [cursor=pointer]:
+        - img [ref=e11]
+      - generic [ref=e13]: LeetCode
+      - button "Next mode" [ref=e14] [cursor=pointer]:
+        - img [ref=e15]
+  - generic [ref=e19]:
+    - generic [ref=e20]:
+      - heading "LeetCode Interview Mode" [level=1] [ref=e21]
+      - paragraph [ref=e22]: Practice coding problems with a live AI interviewer — explain your thinking, ask clarifying questions, and get scored on communication and complexity analysis.
+    - generic [ref=e23]:
+      - paragraph [ref=e24]: DIFFICULTY
+      - generic [ref=e25]:
+        - button "All" [ref=e26] [cursor=pointer]
+        - button "Easy" [ref=e27] [cursor=pointer]
+        - button "Medium" [ref=e28] [cursor=pointer]
+        - button "Hard" [ref=e29] [cursor=pointer]
+    - generic [ref=e30]:
+      - paragraph [ref=e31]: CATEGORY
+      - button "All" [ref=e33] [cursor=pointer]
+    - img [ref=e35]

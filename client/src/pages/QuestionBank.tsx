@@ -90,7 +90,7 @@ interface LeetCodeProblem {
   id: number
   slug: string
   title: string
-  difficulty: 'easy' | 'medium' | 'hard'
+  difficulty: string
   category: string
   neetcode_number: number
   description: string
@@ -242,13 +242,13 @@ function PillBtn({
 }
 
 /* ─── Difficulty dot ─────────────────────────────────────────────────────────── */
-function DiffBadge({ d }: { d: 'easy' | 'medium' | 'hard' }) {
+function DiffBadge({ d }: { d: string }) {
   const map = {
     easy: { color: '#10b981', bg: 'rgba(16,185,129,0.1)' },
     medium: { color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
     hard: { color: '#ef4444', bg: 'rgba(239,68,68,0.1)' },
   }
-  const s = map[d]
+  const s = map[d.toLowerCase() as keyof typeof map]
   return (
     <span style={{
       padding: '2px 8px',
