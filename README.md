@@ -1,6 +1,8 @@
-# Interview Coach
+# Starboard — AI Interview Coach
 
-Full-stack application with a React + TypeScript frontend and a FastAPI backend, backed by Supabase.
+**Live app:** [starboard-theta.vercel.app](https://starboard-theta.vercel.app)
+
+Full-stack application with a React + TypeScript frontend and a FastAPI backend, backed by Supabase. Practice behavioral, LeetCode, and system design interviews with a real-time AI interviewer and get scored on 4–6 dimensions per session.
 
 ## Project structure
 
